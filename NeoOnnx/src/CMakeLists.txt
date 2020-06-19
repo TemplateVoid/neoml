@@ -77,9 +77,8 @@ set(Protobuf_USE_STATIC_LIBS ON)
 
 find_package(Protobuf REQUIRED)
 
-find_program(Protobuf_PROTOC_EXECUTABLE protoc)
 if(NOT Protobuf_PROTOC_EXECUTABLE)
-    message(FATAL_ERROR "The protoc compiler is not found.")
+    find_program(Protobuf_PROTOC_EXECUTABLE protoc REQUIRED)
 endif()
 message(STATUS "Found protoc compiler: ${Protobuf_PROTOC_EXECUTABLE}")
 
@@ -116,6 +115,9 @@ if(NOT NeoOnnx_BUILD_SHARED)
 endif()
 
 target_link_libraries(${PROJECT_NAME} PRIVATE protobuf::libprotobuf NeoML)
+if(ANDROID)
+    target_link_libraries(${PROJECT_NAME} PRIVATE log)
+endif()
 
 if(NOT USE_FINE_OBJECTS)
     target_include_directories(${PROJECT_NAME} PUBLIC $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/>)
