@@ -61,7 +61,7 @@ target_sources(${PROJECT_NAME}
     ../include/NeoMathEngine/NeoMathEngine.h
 )
 
-add_library(NeoML::${PROJECT_NAME} ALIAS ${PROJECT_NAME})
+add_library(Neo::${PROJECT_NAME} ALIAS ${PROJECT_NAME})
 
 target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_11)
 
@@ -339,9 +339,8 @@ if(NOT ANDROID AND NOT IOS)
         set(ENV{MKLROOT} ${FINE_ROOT}/ThirdParty/MKL/${CMAKE_SYSTEM_NAME})
     endif()
 
-    set(MKL_USE_STATIC_LIBS ON)
     find_package(MKL REQUIRED)
-    target_link_libraries(${PROJECT_NAME} PRIVATE MKL::Libs)
+    target_link_libraries(${PROJECT_NAME} PRIVATE MKL::Static)
     target_compile_definitions(${PROJECT_NAME} PRIVATE NEOML_USE_MKL)
 endif()
 
