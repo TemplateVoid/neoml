@@ -26,6 +26,7 @@ find_path(MKL_INCLUDE_DIR
     PATHS
         $ENV{MKLROOT}
         /opt/intel
+        /opt/intel/mkl
     PATH_SUFFIXES
         mkl
         include
