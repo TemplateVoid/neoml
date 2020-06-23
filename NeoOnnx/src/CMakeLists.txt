@@ -75,7 +75,9 @@ target_sources( ${PROJECT_NAME} PRIVATE
 
 if(ANDROID)
     set(CMAKE_LIBRARY_ARCHITECTURE ${ANDROID_ABI})
-    set(CMAKE_FIND_ROOT_PATH $ENV{Protobuf_ROOT})
+    if(DEFINED ENV{Protobuf_ROOT})
+        list(APPEND CMAKE_FIND_ROOT_PATH $ENV{Protobuf_ROOT})
+    endif()
 endif()
 
 set(Protobuf_USE_STATIC_LIBS ON)
