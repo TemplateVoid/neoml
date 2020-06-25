@@ -7,6 +7,10 @@ endif()
 project(NeoML LANGUAGES CXX)
 
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../cmake)
+if(USE_FINE_OBJECTS)
+    file(TO_CMAKE_PATH $ENV{ROOT} ROOT_PATH)
+    list(APPEND CMAKE_MODULE_PATH ${ROOT_PATH}/FineObjects/Cmake)
+endif()
 
 include(Settings)
 include(Version)
