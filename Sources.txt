@@ -17,3 +17,4 @@ get;NeoMLTest;/;NeoMLTest-master 1.0.6.0
 
 copy;%ROOT%/../Neo*;%ROOT%
 copy;%ROOT%/../Build;%ROOT%/Build
+copy;%ROOT%/../cmake;%ROOT%/cmake
