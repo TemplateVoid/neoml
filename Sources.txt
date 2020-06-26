@@ -22,3 +22,4 @@ copy;%ROOT%/../NeoProxy;%ROOT%/NeoML/NeoProxy
 copy;%ROOT%/../cmake;%ROOT%/NeoML/cmake
 copy;%ROOT%/../Build;%ROOT%/NeoML/Build
 copy;%ROOT%/../Main.bld;%ROOT%/NeoML
+copy;%ROOT%/../Publish.txt;%ROOT%/NeoML
