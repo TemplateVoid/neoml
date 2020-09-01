@@ -414,15 +414,6 @@ void CVulkanMathEngine::BlobConvolution( const CConvolutionDesc& convDesc,
 		if (freeTermData != 0) {
 			AddVectorToMatrixRows(source.ObjectCount(), resultData, resultData,
 				result.ObjectSize() / filter.ObjectCount(), filter.ObjectCount(), *freeTermData);
-			/*C2DKernel kernel(*queue, "matrixKernelAddVectorToMatrixRows",
-				1, 1, result.ObjectSize() / filter.ObjectCount(), filter.ObjectCount());
-			kernel.SetParam(1, 0);
-			kernel.SetParam(resultData + b * result.ObjectSize(), 1);
-			kernel.SetParam(resultData + b * result.ObjectSize(), 2);
-			kernel.SetParam(result.ObjectSize() / filter.ObjectCount(), 3);
-			kernel.SetParam(filter.ObjectCount(), 4);
-			kernel.SetParam(*freeTermData, 5);
-			ASSERT_EXPR(kernel.Run());*/
 		}
 	}
 
