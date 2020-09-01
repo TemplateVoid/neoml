@@ -74,6 +74,7 @@ enum TShader {
 	SH_BlobMaxPooling,
 	SH_BlobMeanPooling,
 	SH_PrepareBlobForConvolution,
+	SH_SourceBlobToMatrix,
 	SH_PrepareBlobForConvolutionAdreno,
 	SH_PrepareBlobWithPaddingBuffers,
 	SH_PrepareBlobWithPaddingAdreno,

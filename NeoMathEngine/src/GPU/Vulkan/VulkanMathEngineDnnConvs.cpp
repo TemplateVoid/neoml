@@ -27,6 +27,8 @@ limitations under the License.
 #include <VulkanDevice.h>
 #include <MathEngineDnnConv.h>
 
+#include <algorithm>
+
 namespace NeoML {
 
 // Include the shader code
@@ -52,6 +54,7 @@ namespace NeoML {
 #include <shaders/generated/Blob3dConvolutionBackward.h>
 #include <shaders/generated/BlobConvertFromRLE.h>
 #include <shaders/generated/BlobTimeConvolutionPrepare.h>
+#include <shaders/generated/SourceBlobToMatrix.h>
 
 inline int Ceil( int val, int discret )
 {
@@ -381,7 +384,49 @@ void CVulkanMathEngine::BlobConvolution( const CConvolutionDesc& convDesc,
 	if( filter.Width() == 1 && filter.Height() == 1 && desc.StrideHeight == 1 && desc.StrideWidth == 1 ) {
 		blobConvolution1x1s1Common( desc, sourceData, filterData, freeTermData, resultData );
 		return;
-	} else if( filter.Width() == 3 && filter.Height() == 3
+	}
+	else {
+		const int tempMatrixWidth = filter.ObjectSize();
+		const int tempMatrixHeight = result.ObjectSize() / filter.ObjectCount();
+		constexpr int memorySize = 2 * 1024 * 1024;
+		const int maxPossibleTempMatrixHeight = static_cast<int>( (std::max)( 1, ( memorySize / (8 * tempMatrixWidth ) ) ) );
+		const int tempMatrixHeightBatchSize = (std::min)( tempMatrixHeight, maxPossibleTempMatrixHeight );
+
+		CFloatHandleStackVar temp( mathEngine(), tempMatrixHeightBatchSize * tempMatrixWidth );
+
+		for( int b = 0; b < source.ObjectCount(); b++ ) {
+			int tempMatrixHeightIndex = 0;
+			while( tempMatrixHeightIndex < tempMatrixHeight ) {
+				int curTempMatrixHeight = (std::min)( tempMatrixHeight - tempMatrixHeightIndex, tempMatrixHeightBatchSize );
+
+				sourceBlobToMatrix( desc, sourceData + b * source.ObjectSize(), temp, curTempMatrixHeight, tempMatrixHeightIndex );
+
+				MultiplyMatrixByTransposedMatrix( temp, curTempMatrixHeight, filter.ObjectSize(), filter.ObjectSize(),
+					filterData, filter.ObjectCount(), filter.ObjectSize(),
+					resultData + b * result.ObjectSize() + tempMatrixHeightIndex * filter.ObjectCount(),
+					filter.ObjectCount(), curTempMatrixHeight * filter.ObjectCount() );
+
+				tempMatrixHeightIndex += curTempMatrixHeight;
+			}
+
+			
+		}
+		if (freeTermData != 0) {
+			AddVectorToMatrixRows(source.ObjectCount(), resultData, resultData,
+				result.ObjectSize() / filter.ObjectCount(), filter.ObjectCount(), *freeTermData);
+			/*C2DKernel kernel(*queue, "matrixKernelAddVectorToMatrixRows",
+				1, 1, result.ObjectSize() / filter.ObjectCount(), filter.ObjectCount());
+			kernel.SetParam(1, 0);
+			kernel.SetParam(resultData + b * result.ObjectSize(), 1);
+			kernel.SetParam(resultData + b * result.ObjectSize(), 2);
+			kernel.SetParam(result.ObjectSize() / filter.ObjectCount(), 3);
+			kernel.SetParam(filter.ObjectCount(), 4);
+			kernel.SetParam(*freeTermData, 5);
+			ASSERT_EXPR(kernel.Run());*/
+		}
+	}
+
+	/*else if( filter.Width() == 3 && filter.Height() == 3
 		&& desc.StrideHeight == 1 && desc.StrideWidth == 1
 		&& desc.DilationHeight == 1 && desc.DilationWidth == 1 )
 	{
@@ -392,8 +437,8 @@ void CVulkanMathEngine::BlobConvolution( const CConvolutionDesc& convDesc,
 			blobConvolution3x3s1d1( desc, sourceData, filterData, freeTermData, resultData );
 			return;
 		}
-	}
-
+	} */
+	/*
 	int totalChannels = result.Depth() * result.Channels();
 	int channels8 = totalChannels / 8;
 
@@ -432,7 +477,7 @@ void CVulkanMathEngine::BlobConvolution( const CConvolutionDesc& convDesc,
 		if( ( totalChannels - channels8 * 8 ) != 0 ) {
 			blobConvolutionImpl1( desc, tempSource, tempFilter, freeTermData, resultData, channels8 * 8, totalChannels );
 		}
-	}
+	}*/
 }
 
 void CVulkanMathEngine::BlobConvolutionBackward( const CConvolutionDesc& convDesc, const CFloatHandle& outputDiffData,
@@ -542,6 +587,25 @@ void CVulkanMathEngine::prepareBlobForConvolution( const CBlobDesc& blob, const 
 	runShader( shaderLoader->GET_SHADER_DATA( PrepareBlobForConvolution, true, 0, 0, 2 ),
 		&param, sizeof( param ), 0, 0, 0, 0, bufs, sizes, 2,
 		blob.Width() * blob.ObjectCount(), blob.Height() * channels4, 1 );
+}
+
+void CVulkanMathEngine::sourceBlobToMatrix(const CCommonConvolutionDesc& desc, const CConstFloatHandle& sourceData, 
+	CFloatHandleStackVar& result, int size, int offset )
+{
+	ASSERT_EXPR( !device.IsImageBased() );
+
+	CMemoryHandle bufs[2] = { sourceData, result.GetHandle() };
+	size_t sizes[2] = { desc.Source.ObjectSize() * sizeof(float), result.Size() * sizeof(float) };
+	int channels = desc.Source.Depth() * desc.Source.Channels();
+	PARAM_STRUCT(SourceBlobToMatrix) param = { {desc.PaddingWidth, desc.PaddingHeight}, 
+		{ desc.StrideWidth, desc.StrideHeight },
+		{ desc.DilationWidth, desc.DilationHeight }, 
+		desc.Source.Width(), desc.Source.Height(), channels,
+		desc.Filter.Width(), desc.Filter.Height(), desc.Filter.ObjectSize(), desc.Result.Width(), size, offset };
+
+	runShader( shaderLoader->GET_SHADER_DATA( SourceBlobToMatrix, true, 0, 0, 2),
+		&param, sizeof(param), 0, 0, 0, 0, bufs, sizes, 2,
+		size, channels, 1 );
 }
 
 const CVulkanImage& CVulkanMathEngine::prepareBlobForConvolutionAdreno( const CBlobDesc& blob,

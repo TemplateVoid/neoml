@@ -1089,6 +1089,31 @@ PARAM_STRUCT( PrepareBlobForConvolution )
 
 /////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////
+// SourceBlobToMatrix
+DEFINE_SHADER_2D( SourceBlobToMatrix )
+
+PARAM_STRUCT( SourceBlobToMatrix )
+{
+	ivec2 padding;
+	ivec2 stride;
+	ivec2 dilation;
+
+	int sourceWidth;
+	int sourceHeight;
+	int sourceChannels;
+	
+	int filterWidth;
+	int filterHeight;
+	int filterObjectSize;
+	
+	int resultWidth;
+
+	int size;
+	int offset;
+};
+
+/////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////
 // PrepareBlobForConvolutionAdreno
 IB_DEFINE_SHADER_2D( PrepareBlobForConvolutionAdreno )
 

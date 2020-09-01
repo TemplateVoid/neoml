@@ -49,7 +49,7 @@ static inline VkDeviceMemory allocMemory( const CVulkanDevice& device, VkBuffer 
 
 	bool isFound = false;
 	for( uint32_t i = 0; i < device.MemoryProperties().memoryTypeCount; ++i ) {
-		if( ( memRequirements.memoryTypeBits & (1u << i) ) != 0 &&
+		if( ( memRequirements.memoryTypeBits & ( 1u << i ) ) != 0 &&
 			( device.MemoryProperties().memoryTypes[i].propertyFlags & properties ) == properties ) {
 			allocInfo.memoryTypeIndex = i;
 			isFound = true;

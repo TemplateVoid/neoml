@@ -132,6 +132,7 @@ set(SHADER_SOURCES
     PrepareBlobForConvolution.comp
     BlobReorgFloat.comp
     BlobReorgInt.comp
+    SourceBlobToMatrix.comp
 )
 
 set(IB_SHADER_SOURCES

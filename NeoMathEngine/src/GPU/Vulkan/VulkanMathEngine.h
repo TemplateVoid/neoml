@@ -532,6 +532,8 @@ private:
 	const CVulkanImage& prepareBlobForConvolutionAdreno( const CBlobDesc& blob,
 		const CConstFloatHandle& blobData, int imageId, int& channelGroupSize );
 	void prepareBlobForConvolution( const CBlobDesc& blob, const CConstFloatHandle& blobData, CFloatHandleStackVar& result );
+	void sourceBlobToMatrix( const CCommonConvolutionDesc& desc, const CConstFloatHandle& sourceData, 
+		CFloatHandleStackVar& result, int size, int offset );
 	const CVulkanImage& blobConvolutionBackwardPrepareFilterAdreno( const CBlobDesc& blob,
 		const CFloatHandle& blobData, int imageId );
 
