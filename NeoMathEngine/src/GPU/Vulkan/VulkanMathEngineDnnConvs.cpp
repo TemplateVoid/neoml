@@ -384,7 +384,7 @@ void CVulkanMathEngine::BlobConvolution( const CConvolutionDesc& convDesc,
 	if( filter.Width() == 1 && filter.Height() == 1 && desc.StrideHeight == 1 && desc.StrideWidth == 1 ) {
 		blobConvolution1x1s1Common( desc, sourceData, filterData, freeTermData, resultData );
 		return;
-	}
+	}/*
 	else {
 		const int tempMatrixWidth = filter.ObjectSize();
 		const int tempMatrixHeight = result.ObjectSize() / filter.ObjectCount();
@@ -416,20 +416,22 @@ void CVulkanMathEngine::BlobConvolution( const CConvolutionDesc& convDesc,
 				result.ObjectSize() / filter.ObjectCount(), filter.ObjectCount(), *freeTermData);
 		}
 	}
-
-	/*else if( filter.Width() == 3 && filter.Height() == 3
+	*/
+	
+	else if (filter.Width() == 3 && filter.Height() == 3
 		&& desc.StrideHeight == 1 && desc.StrideWidth == 1
-		&& desc.DilationHeight == 1 && desc.DilationWidth == 1 )
+		&& desc.DilationHeight == 1 && desc.DilationWidth == 1)
 	{
-		if( device.Type() == VDT_Adreno ) {
-			blobConvolution3x3s1d1Adreno( desc, sourceData, filterData, freeTermData, resultData );
-			return;
-		} else {
-			blobConvolution3x3s1d1( desc, sourceData, filterData, freeTermData, resultData );
+		if (device.Type() == VDT_Adreno) {
+			blobConvolution3x3s1d1Adreno(desc, sourceData, filterData, freeTermData, resultData);
 			return;
 		}
-	} */
-	/*
+		else {
+			blobConvolution3x3s1d1(desc, sourceData, filterData, freeTermData, resultData);
+			return;
+		}
+	}
+	
 	int totalChannels = result.Depth() * result.Channels();
 	int channels8 = totalChannels / 8;
 
@@ -468,7 +470,7 @@ void CVulkanMathEngine::BlobConvolution( const CConvolutionDesc& convDesc,
 		if( ( totalChannels - channels8 * 8 ) != 0 ) {
 			blobConvolutionImpl1( desc, tempSource, tempFilter, freeTermData, resultData, channels8 * 8, totalChannels );
 		}
-	}*/
+	}
 }
 
 void CVulkanMathEngine::BlobConvolutionBackward( const CConvolutionDesc& convDesc, const CFloatHandle& outputDiffData,
@@ -748,7 +750,9 @@ void CVulkanMathEngine::blobConvolution3x3s1d1( const CCommonConvolutionDesc& de
 
 	// Convert the input and the filter into NCHW format
 	int channels = source.Depth() * source.Channels();
-
+	int height3 = Ceil(result.Height(), 3);
+	int width4 = Ceil(result.Width(), 4);
+/*
 	int paddingTop = desc.PaddingHeight;
 	int height3 = Ceil(result.Height(), 3);
 	int totalHeight = height3 * 3 + 2;
@@ -766,15 +770,15 @@ void CVulkanMathEngine::blobConvolution3x3s1d1( const CCommonConvolutionDesc& de
 	CFloatHandleStackVar prepFilter( mathEngine(), filter.BlobSize() );
 	TransposeMatrix( filter.ObjectCount(), filterData,
 		filter.Height() * filter.Width(), 1, filter.Depth() * filter.Channels(), 1, prepFilter, prepFilter.Size() );
-
+*/
 	/////////////////////////////////////////////////////////////////////////////////
 	// Convolution code
-	CMemoryHandle bufs[4] = { prepSource.GetHandle(), prepFilter.GetHandle(),
-		(freeTermData == 0) ? prepFilter.GetHandle() : *freeTermData, resultData };
-	size_t sizes[4] = { prepSource.Size() * sizeof(float), prepFilter.Size() * sizeof(float),
+	CMemoryHandle bufs[4] = { sourceData, filterData,
+		(freeTermData == 0) ? filterData : *freeTermData, resultData };
+	size_t sizes[4] = { source.BlobSize() * sizeof(float), filter.BlobSize() * sizeof(float),
 		filter.ObjectCount() * sizeof(float), result.BlobSize() * sizeof(float) };
 
-	PARAM_STRUCT( BlobConvolution3x3s1d1 ) param = { totalWidth, totalHeight, channels, source.ObjectCount(),
+	PARAM_STRUCT(BlobConvolution3x3s1d1) param = { {desc.PaddingWidth, desc.PaddingHeight}, source.Width(), source.Height(), channels, source.ObjectCount(),
 		result.Width(), result.Height(), filter.ObjectCount(), (freeTermData == 0) ? 0 : 1 };
 
 	runShader( shaderLoader->GET_SHADER_DATA( BlobConvolution3x3s1d1, true, 0, 0, 4), &param,

@@ -1248,6 +1248,7 @@ DEFINE_SHADER_3D( BlobConvolution3x3s1d1 )
 
 PARAM_STRUCT( BlobConvolution3x3s1d1 )
 {
+	ivec2 padding;
 	int inputWidth;
 	int inputHeight;
 	int inputChannels;

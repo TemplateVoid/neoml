@@ -159,29 +159,28 @@ bool CVulkanInstance::enumDevices()
 		families.resize( familyCount );
 		vkGetPhysicalDeviceQueueFamilyProperties( physicalDevices[i], &familyCount, families.data() );
 
+		TVulkanDeviceType deviceType = defineDeviceType( props );
+
 		for( int familyNum = 0; familyNum < static_cast<int>( families.size() ); ++familyNum ) {
 			if( families[familyNum].queueCount != 0
 				&& ( families[familyNum].queueFlags & VK_QUEUE_COMPUTE_BIT ) != 0
-				&& defineDeviceType( props ) != VDT_Undefined )
+				&& deviceType != VDT_Undefined )
 			{
-				TVulkanDeviceType deviceType = defineDeviceType( props );
-				if( deviceType != VDT_Undefined ) {
-					CVulkanDeviceInfo info;
-					info.Type = deviceType;
-					info.PhysicalDevice = physicalDevices[i];
-					info.Family = familyNum;
-					info.AvailableMemory = 0;
-					info.Properties = props;
-					vkGetPhysicalDeviceMemoryProperties( physicalDevices[i], &info.MemoryProperties );
-					for( int h = 0; h < static_cast<int>( info.MemoryProperties.memoryHeapCount ); h++ ) {
-						if( ( info.MemoryProperties.memoryHeaps[h].flags & VK_MEMORY_HEAP_DEVICE_LOCAL_BIT ) != 0 ) {
-							info.AvailableMemory += info.MemoryProperties.memoryHeaps[h].size;
-						}
+				CVulkanDeviceInfo info;
+				info.Type = deviceType;
+				info.PhysicalDevice = physicalDevices[i];
+				info.Family = familyNum;
+				info.AvailableMemory = 0;
+				info.Properties = props;
+				vkGetPhysicalDeviceMemoryProperties( physicalDevices[i], &info.MemoryProperties );
+				for( int h = 0; h < static_cast<int>( info.MemoryProperties.memoryHeapCount ); h++ ) {
+					if( ( info.MemoryProperties.memoryHeaps[h].flags & VK_MEMORY_HEAP_DEVICE_LOCAL_BIT ) != 0 ) {
+						info.AvailableMemory += info.MemoryProperties.memoryHeaps[h].size;
 					}
-
-					devices.push_back( info );
-					break;
 				}
+
+				devices.push_back( info );
+				break;
 			}
 		}
 	}

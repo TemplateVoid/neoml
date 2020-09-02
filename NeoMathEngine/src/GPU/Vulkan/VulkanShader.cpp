@@ -204,7 +204,7 @@ void CVulkanShaderLoader::calculateThreadGroupSize(int dimensions,
 		case 3: {
 			threadGroupSizeX = 
 				( device.Type() == VDT_MaliBifrost ) ? VulkanMaliBifrostThreadCount2D_X : VulkanAdrenoRegularThreadCount2D_X;
-			threadGroupSizeY = 
+			threadGroupSizeY =
 				( device.Type() == VDT_MaliBifrost ) ? VulkanMaliBifrostThreadCount2D_Y : VulkanAdrenoRegularThreadCount2D_Y;
 			threadGroupSizeZ = 1;
 			break;
