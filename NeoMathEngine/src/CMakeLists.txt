@@ -132,7 +132,8 @@ else()
 endif()
 
 # GPU specific source and settings
-if((WIN32 OR LINUX) AND CMAKE_SIZEOF_VOID_P EQUAL 8)
+if(FALSE)
+#if((WIN32 OR LINUX) AND CMAKE_SIZEOF_VOID_P EQUAL 8)
 
     include(CheckLanguage)
     check_language(CUDA)

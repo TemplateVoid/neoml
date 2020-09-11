@@ -115,7 +115,7 @@ void CConvLayer::RunOnce()
 	for( int i = 0; i < outputBlobs.Size(); ++i ) {
 		CFloatHandle freeTerm = FreeTerms()->GetData();
 		MathEngine().BlobConvolution( *convDesc, inputBlobs[i]->GetData(),
-			Filter()->GetData(), &freeTerm, outputBlobs[i]->GetData() );
+			Filter()->GetData(), &freeTerm, outputBlobs[i]->GetData(), 0 );
 	}
 }
 

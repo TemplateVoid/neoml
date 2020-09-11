@@ -492,7 +492,7 @@ void CCpuMathEngine::blobConvolutionForwardAlgo1( const CCpuConvolutionDesc& des
 }
 
 void CCpuMathEngine::BlobConvolution( const CConvolutionDesc& convDesc, const CFloatHandle& source,
-	const CFloatHandle& filter, const CFloatHandle* freeTerm, const CFloatHandle& result )
+	const CFloatHandle& filter, const CFloatHandle* freeTerm, const CFloatHandle& result, CFloatHandle* )
 {
 	const CCpuConvolutionDesc& desc = static_cast<const CCpuConvolutionDesc&>( convDesc );
 

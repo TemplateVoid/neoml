@@ -347,7 +347,7 @@ public:
 		int strideHeight, int strideWidth, int dilationHeight, int dilationWidth, const CBlobDesc& filter, const CBlobDesc& output ) override;
 	void BlobConvolution( const CConvolutionDesc& desc,
 		const CFloatHandle& source, const CFloatHandle& filter, const CFloatHandle* freeTerm,
-		const CFloatHandle& result ) override;
+		const CFloatHandle& result , CFloatHandle*) override;
 	void BlobConvolutionBackward( const CConvolutionDesc& desc, const CFloatHandle& outputDiff,
 		const CFloatHandle& filter, const CFloatHandle* freeTerm, const CFloatHandle& inputDiff ) override;
 	void BlobConvolutionLearnAdd( const CConvolutionDesc& desc,

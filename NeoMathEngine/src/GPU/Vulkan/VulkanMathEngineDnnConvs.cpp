@@ -153,7 +153,7 @@ void CVulkanMathEngine::BlobRleConvolution( const CRleConvolutionDesc& desc, con
 
 	CFloatHandleVar inputConverted( mathEngine(), convDesc->Source.BlobSize() );
 	blobConvertFromRleCommon( rleDesc, sourceData, inputConverted );
-	BlobConvolution( *(rleDesc.ConvDesc), inputConverted, filterData, freeTermData, resultData );
+	BlobConvolution( *(rleDesc.ConvDesc), inputConverted, filterData, freeTermData, resultData, 0 );
 }
 
 void CVulkanMathEngine::BlobRleConvolutionLearnAdd( const CRleConvolutionDesc&, const CFloatHandle&, const CFloatHandle&,
@@ -368,7 +368,7 @@ CConvolutionDesc* CVulkanMathEngine::InitBlobConvolution( const CBlobDesc& sourc
 
 void CVulkanMathEngine::BlobConvolution( const CConvolutionDesc& convDesc,
 	const CFloatHandle& sourceData, const CFloatHandle& filterData, const CFloatHandle* freeTermData,
-	const CFloatHandle& resultData )
+	const CFloatHandle& resultData , CFloatHandle* dump)
 {
 	ASSERT_EXPR( sourceData.GetMathEngine() == this );
 	ASSERT_EXPR( filterData.GetMathEngine() == this );
@@ -427,7 +427,7 @@ void CVulkanMathEngine::BlobConvolution( const CConvolutionDesc& convDesc,
 			return;
 		}
 		else {
-			blobConvolution3x3s1d1(desc, sourceData, filterData, freeTermData, resultData);
+			blobConvolution3x3s1d1(desc, sourceData, filterData, freeTermData, resultData, dump);
 			return;
 		}
 	}
@@ -742,7 +742,7 @@ const CVulkanImage& CVulkanMathEngine::blobConvolution3x3s1d1PrepareSourceAdreno
 
 void CVulkanMathEngine::blobConvolution3x3s1d1( const CCommonConvolutionDesc& desc,
 	const CFloatHandle& sourceData, const CFloatHandle& filterData, const CFloatHandle* freeTermData,
-	const CFloatHandle& resultData )
+	const CFloatHandle& resultData, CFloatHandle* dump)
 {
 	const CBlobDesc& source = desc.Source;
 	const CBlobDesc& filter = desc.Filter;
@@ -750,8 +750,6 @@ void CVulkanMathEngine::blobConvolution3x3s1d1( const CCommonConvolutionDesc& de
 
 	// Convert the input and the filter into NCHW format
 	int channels = source.Depth() * source.Channels();
-	int height3 = Ceil(result.Height(), 3);
-	int width4 = Ceil(result.Width(), 4);
 /*
 	int paddingTop = desc.PaddingHeight;
 	int height3 = Ceil(result.Height(), 3);
@@ -772,17 +770,29 @@ void CVulkanMathEngine::blobConvolution3x3s1d1( const CCommonConvolutionDesc& de
 		filter.Height() * filter.Width(), 1, filter.Depth() * filter.Channels(), 1, prepFilter, prepFilter.Size() );
 */
 	/////////////////////////////////////////////////////////////////////////////////
-	// Convolution code
-	CMemoryHandle bufs[4] = { sourceData, filterData,
-		(freeTermData == 0) ? filterData : *freeTermData, resultData };
-	size_t sizes[4] = { source.BlobSize() * sizeof(float), filter.BlobSize() * sizeof(float),
-		filter.ObjectCount() * sizeof(float), result.BlobSize() * sizeof(float) };
 
-	PARAM_STRUCT(BlobConvolution3x3s1d1) param = { {desc.PaddingWidth, desc.PaddingHeight}, source.Width(), source.Height(), channels, source.ObjectCount(),
+	int channels4 = Ceil(channels, 4);
+
+	int tempFilterSize = filter.Width() * filter.ObjectCount() * filter.Height() * channels4 * 4;
+	CFloatHandleStackVar tempFilter(mathEngine(), tempFilterSize);
+	prepareBlobForConvolution(filter, filterData, tempFilter);
+
+	int tempSourceSize = source.Width() * source.ObjectCount() * source.Height() * channels4 * 4;
+	CFloatHandleStackVar tempSource(mathEngine(), tempSourceSize);
+	prepareBlobForConvolution(source, sourceData, tempSource);
+
+	// Convolution code
+	CMemoryHandle bufs[5] = { tempSource.GetHandle(), tempFilter.GetHandle(),
+		(freeTermData == 0) ? filterData : *freeTermData, resultData, *dump };
+	size_t sizes[5] = { tempSourceSize * sizeof(float), tempFilterSize * sizeof(float),
+		filter.ObjectCount() * sizeof(float), result.BlobSize() * sizeof(float), 288*4}; 
+
+	PARAM_STRUCT(BlobConvolution3x3s1d1) param = { {desc.PaddingWidth, desc.PaddingHeight}, source.Width(), source.Height(), 
+		channels, channels4, source.ObjectCount(),
 		result.Width(), result.Height(), filter.ObjectCount(), (freeTermData == 0) ? 0 : 1 };
 
-	runShader( shaderLoader->GET_SHADER_DATA( BlobConvolution3x3s1d1, true, 0, 0, 4), &param,
-		sizeof(param), 0, 0, 0, 0, bufs, sizes, 4, width4, height3 * result.ObjectCount(), filter.ObjectCount() );
+	runShader( shaderLoader->GET_SHADER_DATA( BlobConvolution3x3s1d1, true, 0, 0, 5), &param,
+		sizeof(param), 0, 0, 0, 0, bufs, sizes, 5, result.Width(), result.Height(), filter.ObjectCount() * result.ObjectCount() );
 }
 
 void CVulkanMathEngine::blobConvolution3x3s1d1PrepareSource( const CBlobDesc& blob, const CFloatHandle& blobData,

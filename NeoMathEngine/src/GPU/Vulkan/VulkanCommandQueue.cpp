@@ -148,7 +148,7 @@ void CVulkanCommandQueue::RunCopyBuffer( VkBuffer from, VkBuffer to, const VkBuf
 void CVulkanCommandQueue::Wait()
 {
 	// Wait until all commands complete
-	vkSucceded( vkQueueWaitIdle( queue ) );
+	VkCheck( vkQueueWaitIdle( queue ) );
 
 	for( auto& cmd: commands ) {
 		if( cmd.DescriptorPool != nullptr && cmd.DescriptionSet != nullptr ) {

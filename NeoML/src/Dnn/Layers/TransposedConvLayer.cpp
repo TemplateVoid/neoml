@@ -89,7 +89,7 @@ void CTransposedConvLayer::BackwardOnce()
 
 	for(int i = 0; i < inputDiffBlobs.Size(); ++i) {
 		MathEngine().BlobConvolution( *convDesc, outputDiffBlobs[i]->GetData(),
-			Filter()->GetData(), 0, inputDiffBlobs[i]->GetData() );
+			Filter()->GetData(), 0, inputDiffBlobs[i]->GetData(), 0 );
 	}
 }
 

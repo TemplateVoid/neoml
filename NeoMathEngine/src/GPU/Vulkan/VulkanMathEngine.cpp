@@ -42,6 +42,8 @@ static const size_t VulkanMaxExchangeAsyncSize = 65536;
 // The size of the buffer for data exchange
 static const size_t VulkanExchangeBufferSize = 4 * 1024 * 1024; // 4 MB
 
+
+
 // The maximum number of groups over the X dimension when working with a 1D (vector) shader
 // With larger sizes, the shader data will be represented in two dimensions
 static const int VulkanMaxVectorXGroupCount = 8192;

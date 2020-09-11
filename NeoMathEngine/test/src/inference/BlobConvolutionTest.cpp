@@ -14,7 +14,7 @@ limitations under the License.
 --------------------------------------------------------------------------------------------------------------*/
 
 #include <TestFixture.h>
-
+#include <chrono>
 using namespace NeoML;
 using namespace NeoMLTest;
 
@@ -124,30 +124,62 @@ static void blobConvolutionImpl( const CTestParams& params, int seed )
 
 	CFloatBlob outputBlob( MathEngine(), inputLength, inputBatch, 1, outputHeight, outputWidth, 1, filterCount );
 
+	CFloatBlob dumpBlob(MathEngine(), inputLength, inputBatch, 1, 1, 1, 1, 288);
+
 	CConvolutionDesc* convDesc = MathEngine().InitBlobConvolution( inputBlob.GetDesc(),
 		paddingHeight, paddingWidth, strideHeight, strideWidth,
 		dilationHeight, dilationWidth, filterBlob.GetDesc(), outputBlob.GetDesc() );
 
-	CFloatHandle freeTermDataPtr = freeTermBlob.GetData();
-
-	MathEngine().BlobConvolution( *convDesc, inputBlob.GetData(), filterBlob.GetData(),
-		isZeroFreeTerm ? 0 : &freeTermDataPtr, outputBlob.GetData() );
-	delete convDesc;
-
+	CFloatHandle freeTermDataPtr = freeTermBlob.GetData(); 
+	CFloatHandle dumpDataPtr = dumpBlob.GetData();
+	
 	const int outputSize = inputLength * inputBatch * outputHeight * outputWidth * 1 * filterCount;
-	std::vector<float> expectedData( outputSize );
-	std::vector<float> actualData( outputSize );
+	std::vector<float> expectedData(outputSize);
+	std::vector<float> actualData(outputSize);
+
+	std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
+	MathEngine().BlobConvolution( *convDesc, inputBlob.GetData(), filterBlob.GetData(),
+		isZeroFreeTerm ? 0 : &freeTermDataPtr, outputBlob.GetData(), &dumpDataPtr );
+	delete convDesc;  
+
 	outputBlob.CopyTo( actualData.data() );
+	std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
+	std::cout << "Time difference = " << std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() << "[ms]" << std::endl;
+	 
+	//std::vector<float> dump(288 * 4);  
+	//dumpBlob.CopyTo(dump.data());
 
 	batchConvolutionForward( inputData.data(), filterData.data(), freeTermData.data(), expectedData.data(),
 		inputLength, inputBatch, inputHeight, inputWidth, inputDepth, inputChannels,
 		paddingHeight, paddingWidth, filterCount, filterHeight, filterWidth,
-		dilationHeight, dilationWidth, strideHeight, strideWidth );
+		dilationHeight, dilationWidth, strideHeight, strideWidth ); 
 
 	for( int i = 0; i < outputSize; ++i ) {
-		ASSERT_NEAR( expectedData[i], actualData[i], 1e-3f );
+	//	printf("%f ", actualData[i]);
+	//	if ((i + 1) % (inputWidth - 2) == 0) { printf("\n"); }
+	//	flushall(); 
+		ASSERT_NEAR( expectedData[i], actualData[i], 1e-2f ); 
+	}  
+
+	/*for (size_t i = 0; i < filterData.size(); ++i) {  
+		printf("%f ", filterData[i]);  
+		if ((i + 1) % inputChannels == 0) { printf("\n"); }   
 	}
+	 
+	printf("=================\n");   
+	 
+	for (size_t i = 0; i < inputData.size(); ++i) {
+		printf("%f ", inputData[i]);
+		if ((i + 1) % inputChannels == 0) { printf("\n"); }
+	} 
+	printf("=================\n");    
+	for (size_t i = 0; i < 32 * 4; ++i)   
+	{  
+		printf("%f ", dump[i]); 
+		if ((i + 1) % 32 == 0) { printf("\n"); }
+	}*/
 }
+
 
 //------------------------------------------------------------------------------------------------------------
 
@@ -164,15 +196,15 @@ INSTANTIATE_TEST_CASE_P( CMathEngineBlobConvolutionTestInstantiation, CMathEngin
 			"InputDepth = (1..3);"
 			"InputChannels = (1..3);"
 			"FilterCount = (1..3);"
-			"FilterHeight = (2..5);"
+			"FilterHeight = (2..5);" 
 			"FilterWidth = (2..5);"
-			"PaddingHeight = (0..1);"
+			"PaddingHeight = (0..1);"  
 			"PaddingWidth = (0..1);"
 			"DilationHeight = (1..2);"
 			"DilationWidth = (1..2);"
-			"StrideHeight = (1..2);"
+			"StrideHeight = (1..2);" 
 			"StrideWidth = (1..2);"
-			"IsZeroFreeTerm = (0..1);"
+			"IsZeroFreeTerm = (0..1);" 
 			"Values = (-10..10);"
 			"TestCount = 100;"
 		),
@@ -233,28 +265,28 @@ INSTANTIATE_TEST_CASE_P( CMathEngineBlobConvolutionTestInstantiation, CMathEngin
 			"StrideHeight = 2;"
 			"StrideWidth = 3;"
 			"IsZeroFreeTerm = 0;"
-			"Values = (-10..10);"
+			"Values = (-10..10);" 
 			"TestCount = 1;"
 		),
 		CTestParams(
 			"InputLength = 1;"
 			"InputBatch = 1;"
-			"InputHeight = 3;"
-			"InputWidth = 3;"
-			"InputDepth = 1;"
-			"InputChannels = 3;"
-			"FilterCount = 1;"
-			"FilterHeight = 3;"
-			"FilterWidth = 3;"
-			"PaddingHeight = 0;"
-			"PaddingWidth = 0;"
+			"InputHeight = 1024;"
+			"InputWidth = 1024;"  
+			"InputDepth = 1;"   
+			"InputChannels = 512;" 
+			"FilterCount = 1;" 
+			"FilterHeight = 3;" 
+			"FilterWidth = 3;"  
+			"PaddingHeight = 0;"   
+			"PaddingWidth = 0;"  
 			"DilationHeight = 1;"
 			"DilationWidth = 1;"
-			"StrideHeight = 1;"
+			"StrideHeight = 1;"  
 			"StrideWidth = 1;"
 			"IsZeroFreeTerm = 1;"
-			"Values = (-10..10);"
-			"TestCount = 1;"
+			"Values = (-1..1);"
+			"TestCount = 1;" 
 		),
 		CTestParams(
 			"InputLength = 1;"

@@ -3,6 +3,7 @@
 #include <vulkan/vulkan_core.h>
 
 #include <string>
+#include <stdexcept>
 
 // The macro checks if a vulkanAPI function call was successful
 #define vkSucceded( functionCall ) { VkResult temp = functionCall; temp; assert( temp == VK_SUCCESS ); }

@@ -1252,10 +1252,13 @@ PARAM_STRUCT( BlobConvolution3x3s1d1 )
 	int inputWidth;
 	int inputHeight;
 	int inputChannels;
+	int inputChannels4;
+
 	int batchSize;
 
 	int width;
 	int height;
+
 	int filterCount;
 	int isFreeTerm;
 };
