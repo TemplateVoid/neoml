@@ -21,15 +21,15 @@ limitations under the License.
 
 #include <NeoMathEngine/CrtAllocatedObject.h>
 #include <vector>
+#include <unordered_map>
 #include <vulkan/vulkan.h>
 #include <MathEngineAllocator.h>
+#include <VulkanDll.h>
 
 namespace NeoML {
 
 // The maximum number of bindings per shader
 constexpr int VulkanMaxBindingCount = 8;
-
-struct CVulkanDevice;
 
 // All available shaders
 enum TShader {
@@ -187,36 +187,74 @@ enum TShader {
 	SH_Count
 };
 
-//------------------------------------------------------------------------------------------------------------
+struct CWorkGroup
+{
+	static constexpr uint16_t Size = 64;
 
+	uint16_t X;
+	uint16_t Y;
+	uint16_t Z;
+
+	CWorkGroup() : X(Size), Y(1), Z(1) {}
+};
+
+inline bool operator==(const CWorkGroup& lhs, const CWorkGroup& rhs) 
+{
+	return lhs.X == rhs.X && lhs.Y == rhs.Y && lhs.Z == rhs.Z;
+}
+}
+
+namespace std {
+	template <>
+	struct hash<NeoML::CWorkGroup> {
+		std::size_t operator()(const NeoML::CWorkGroup& workGroup) const {
+			uint64_t result = (static_cast<uint64_t>(workGroup.X) << 32) | (workGroup.Y << 16) | workGroup.Z;
+			return std::hash<uint64_t>{}(result);
+		}
+	};
+}
+
+namespace NeoML {
+//------------------------------------------------------------------------------------------------------------
 // The data that describes a shader
 struct CVulkanShaderData : public CCrtAllocatedObject {
 	VkShaderModule Module;
 	VkDescriptorSetLayout DescLayout;
 	VkPipelineLayout Layout;
-	VkPipeline Pipeline;
 	bool IsImageBased;
-	int GroupSizeX;
-	int GroupSizeY;
-	int GroupSizeZ;
-
+	std::unordered_map<CWorkGroup, VkPipeline> pipelines;
+	
 	CVulkanShaderData();
-
-	int GetGroupSize() const { return GroupSizeX * GroupSizeY * GroupSizeZ; }
 };
 
 inline CVulkanShaderData::CVulkanShaderData() :
 	Module(VK_NULL_HANDLE),
 	DescLayout(VK_NULL_HANDLE),
 	Layout(VK_NULL_HANDLE),
-	Pipeline(VK_NULL_HANDLE),
-	IsImageBased(false),
-	GroupSizeX(1),
-	GroupSizeY(1),
-	GroupSizeZ(1)
+	IsImageBased(false)
 {
 }
 
+struct CVulkanShader
+{
+	CVulkanShader( const CVulkanShaderData& data ) :
+		Module(data.Module),
+		DescLayout(data.DescLayout),
+		Layout(data.Layout),
+		IsImageBased(data.IsImageBased)
+	{}
+	
+	constexpr int GetGroupSize() const { return CWorkGroup::Size; }
+
+	VkShaderModule Module;
+	VkDescriptorSetLayout DescLayout;
+	VkPipelineLayout Layout;
+	bool IsImageBased;
+	VkPipeline Pipeline;
+	int GroupSizeX;
+	int GroupSizeY;
+	int GroupSizeZ;
+};
 //------------------------------------------------------------------------------------------------------------
 
 class CVulkanDll;
@@ -228,20 +266,23 @@ public:
 	~CVulkanShaderLoader();
 
 	// Gets the shader data
-	const CVulkanShaderData& GetShaderData(TShader id, bool isIB, const uint32_t* code, int codeLen,
-		size_t paramSize, int imageCount, int samplerCount, int bufferCount, int dimensions);
+	CVulkanShader GetShaderData(TShader id, bool isIB,
+		const uint32_t* code, int codeLen, size_t paramSize, 
+		int imageCount, int samplerCount, int bufferCount, int dimensions,
+		int gridWidth, int gridHeight, int gridDepth );
 private:
-	void calculateThreadGroupSize( int dimensions, int& threadGroupSizeX, int& threadGroupSizeY, int& threadGroupSizeZ ) const;
+	void calculateThreadGroupSize( int dimensions, uint16_t& threadGroupSizeX, uint16_t& threadGroupSizeY, uint16_t& threadGroupSizeZ,
+		int gridWidth, int gridHeight, int gridDepth ) const;
 
 	const CVulkanDevice& device;
 	std::vector< CVulkanShaderData*, CrtAllocator<CVulkanShaderData*> > shaders; // cache
 };
 
 // A helper macro
-#define GET_SHADER_DATA(shader, hasParam, imageCount, samplerCount, bufferCount)					\
+#define GET_SHADER_DATA(shader, hasParam, imageCount, samplerCount, bufferCount, countX, countY, countZ)					\
 	GetShaderData(SH_##shader, shader##IsIB, Shader_##shader, sizeof(Shader_##shader),				\
 		(hasParam ? sizeof(PARAM_STRUCT(shader)) : 0), (imageCount), (samplerCount), (bufferCount),	\
-		shader##Dimensions)
+		shader##Dimensions, (countX), (countY), (countZ) )
 }
 
 #endif // NEOML_USE_VULKAN

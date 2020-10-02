@@ -92,7 +92,7 @@ void CVulkanMathEngine::TransposeMatrix( int batchSize, const CConstFloatHandle&
 
 	PARAM_STRUCT(Transpose) param = { height, medium, width, channels, batchSize };
 
-	runVectorShader( shaderLoader->GET_SHADER_DATA(Transpose, true, 0, 0, 2),
+	runVectorShader( shaderLoader->GET_SHADER_DATA(Transpose, true, 0, 0, 2, vectorSize, 1, 1),
 		&param, sizeof(param), 0, 0, 0, 0, bufs, sizes, 2, vectorSize );
 }
 
@@ -105,7 +105,7 @@ void CVulkanMathEngine::TransposeMatrix( int batchSize, const CConstIntHandle& f
 
 	PARAM_STRUCT(Transpose) param = { height, medium, width, channels, batchSize };
 
-	runVectorShader( shaderLoader->GET_SHADER_DATA(Transpose, true, 0, 0, 2),
+	runVectorShader( shaderLoader->GET_SHADER_DATA(Transpose, true, 0, 0, 2, vectorSize, 1, 1),
 		&param, sizeof(param), 0, 0, 0, 0, bufs, sizes, 2, vectorSize );
 }
 
@@ -151,7 +151,7 @@ void CVulkanMathEngine::MultiplySparseMatrixByTransposedMatrix( int firstHeight,
 
 	PARAM_STRUCT( MultiplySparseMatrixByTransposedMatrix ) param = { firstHeight, firstWidth, secondHeight };
 
-	runShader( shaderLoader->GET_SHADER_DATA( MultiplySparseMatrixByTransposedMatrix, true, 0, 0, 5 ),
+	runShader( shaderLoader->GET_SHADER_DATA( MultiplySparseMatrixByTransposedMatrix, true, 0, 0, 5, secondHeight, firstHeight, 1),
 		&param, sizeof( param ), 0, 0, 0, 0, bufs, sizes, 5, secondHeight, firstHeight, 1 );
 }
 
@@ -170,7 +170,7 @@ void CVulkanMathEngine::MultiplyTransposedMatrixBySparseMatrixAndAdd( int firstH
 
 	PARAM_STRUCT( MultiplyTransposedMatrixBySparseMatrix ) param = { firstHeight, firstWidth, secondWidth };
 
-	runVectorShader( shaderLoader->GET_SHADER_DATA( MultiplyTransposedMatrixBySparseMatrix, true, 0, 0, 5 ),
+	runVectorShader( shaderLoader->GET_SHADER_DATA( MultiplyTransposedMatrixBySparseMatrix, true, 0, 0, 5, firstWidth, 1, 1),
 		&param, sizeof( param ), 0, 0, 0, 0, bufs, sizes, 5, firstWidth );
 }
 
@@ -212,7 +212,7 @@ void CVulkanMathEngine::MultiplyDiagMatrixByMatrix( const CConstFloatHandle& fir
 
 		PARAM_STRUCT( MultiplyDiagMatrixByMatrixAdreno ) param = { firstSize, secondWidth };
 
-		runShader( shaderLoader->GET_SHADER_DATA( MultiplyDiagMatrixByMatrixAdreno, true, 0, 1, 2 ),
+		runShader( shaderLoader->GET_SHADER_DATA( MultiplyDiagMatrixByMatrixAdreno, true, 0, 1, 2, Ceil(firstSize, 4), secondWidth, 1),
 			&param, sizeof( param ), 0, 0, samplers, 1, bufs, sizes, 2, Ceil( firstSize, 4 ), secondWidth, 1 );
 	} else {
 		const size_t matrixSize = firstSize * secondWidth;
@@ -221,7 +221,7 @@ void CVulkanMathEngine::MultiplyDiagMatrixByMatrix( const CConstFloatHandle& fir
 
 		PARAM_STRUCT( MultiplyDiagMatrixByMatrix ) param = { firstSize, secondWidth };
 
-		runShader( shaderLoader->GET_SHADER_DATA( MultiplyDiagMatrixByMatrix, true, 0, 0, 3 ),
+		runShader( shaderLoader->GET_SHADER_DATA( MultiplyDiagMatrixByMatrix, true, 0, 0, 3, Ceil(firstSize, 4), secondWidth, 1),
 			&param, sizeof( param ), 0, 0, 0, 0, bufs, sizes, 3, Ceil( firstSize, 4 ), secondWidth, 1 );
 	}
 }
@@ -257,7 +257,7 @@ void CVulkanMathEngine::addVectorToMatrixRowsAdreno( int /*batchSize*/,
 
 	PARAM_STRUCT( AddVectorToMatrixRowsAdreno ) param = { matrixHeight, matrixWidth };
 
-	runShader( shaderLoader->GET_SHADER_DATA( AddVectorToMatrixRowsAdreno, true, 0, 1, 2 ),
+	runShader( shaderLoader->GET_SHADER_DATA( AddVectorToMatrixRowsAdreno, true, 0, 1, 2, Ceil(matrixWidth, 4), matrixHeight, 1),
 		&param, sizeof( param ), 0, 0, samplers, 1, bufs, sizes, 2, Ceil( matrixWidth, 4 ), matrixHeight, 1 );
 }
 
@@ -272,7 +272,7 @@ void CVulkanMathEngine::AddVectorToMatrixRows( int batchSize,
 
 	PARAM_STRUCT( BatchAddVectorToMatrixRows ) param = { batchSize, matrixHeight, matrixWidth };
 
-	runShader( shaderLoader->GET_SHADER_DATA( BatchAddVectorToMatrixRows, true, 0, 0, 3 ),
+	runShader( shaderLoader->GET_SHADER_DATA( BatchAddVectorToMatrixRows, true, 0, 0, 3, matrixWidth, Ceil(matrixHeight, 4), batchSize),
 		&param, sizeof( param ), 0, 0, 0, 0, bufs, sizes, 3, matrixWidth, Ceil( matrixHeight, 4 ), batchSize );
 }
 
@@ -288,7 +288,7 @@ void CVulkanMathEngine::AddVectorToMatrixColumns( const CConstFloatHandle& matri
 
 		PARAM_STRUCT( AddVectorToMatrixColumnsFloatAdreno ) param = { matrixHeight, matrixWidth };
 
-		runShader( shaderLoader->GET_SHADER_DATA( AddVectorToMatrixColumnsFloatAdreno, true, 0, 1, 2 ),
+		runShader( shaderLoader->GET_SHADER_DATA( AddVectorToMatrixColumnsFloatAdreno, true, 0, 1, 2, matrixWidth, Ceil(matrixHeight, 4), 1),
 			&param, sizeof( param ), 0, 0, samplers, 1, bufs, sizes, 2, matrixWidth, Ceil( matrixHeight, 4 ), 1 );
 	} else {
 		CMemoryHandle bufs[3] = { matrixHandle, vectorHandle, resultHandle };
@@ -297,7 +297,7 @@ void CVulkanMathEngine::AddVectorToMatrixColumns( const CConstFloatHandle& matri
 
 		PARAM_STRUCT( AddVectorToMatrixColumnsFloat ) param = { matrixHeight, matrixWidth };
 
-		runShader( shaderLoader->GET_SHADER_DATA( AddVectorToMatrixColumnsFloat, true, 0, 0, 3 ),
+		runShader( shaderLoader->GET_SHADER_DATA( AddVectorToMatrixColumnsFloat, true, 0, 0, 3, Ceil(matrixWidth, 4), matrixHeight, 1),
 			&param, sizeof( param ), 0, 0, 0, 0, bufs, sizes, 3, Ceil( matrixWidth, 4 ), matrixHeight, 1 );
 	}
 }
@@ -312,7 +312,7 @@ void CVulkanMathEngine::AddVectorToMatrixColumns( const CConstIntHandle& matrixH
 
 	PARAM_STRUCT(AddVectorToMatrixColumnsInt) param = { matrixHeight, matrixWidth };
 
-	runShader( shaderLoader->GET_SHADER_DATA(AddVectorToMatrixColumnsInt, true, 0, 0, 3),
+	runShader( shaderLoader->GET_SHADER_DATA(AddVectorToMatrixColumnsInt, true, 0, 0, 3, Ceil(matrixWidth, 4), matrixHeight, 1),
 		&param, sizeof(param), 0, 0, 0, 0, bufs, sizes, 3, Ceil(matrixWidth, 4), matrixHeight, 1);
 }
 
@@ -333,7 +333,7 @@ void CVulkanMathEngine::SetVectorToMatrixRows( const CFloatHandle& resultHandle,
 
 		PARAM_STRUCT( SetVectorToMatrixRowsAdreno ) param = { matrixHeight, matrixWidth };
 
-		runShader( shaderLoader->GET_SHADER_DATA( SetVectorToMatrixRowsAdreno, true, 0, 1, 1 ),
+		runShader( shaderLoader->GET_SHADER_DATA( SetVectorToMatrixRowsAdreno, true, 0, 1, 1, Ceil(matrixWidth, 4), matrixHeight, 1),
 			&param, sizeof( param ), 0, 0, samplers, 1, bufs, sizes, 1, Ceil( matrixWidth, 4 ), matrixHeight, 1 );
 	} else {
 		CMemoryHandle bufs[2] = { vectorHandle, resultHandle };
@@ -341,7 +341,7 @@ void CVulkanMathEngine::SetVectorToMatrixRows( const CFloatHandle& resultHandle,
 
 		PARAM_STRUCT( SetVectorToMatrixRows ) param = { matrixHeight, matrixWidth };
 
-		runShader( shaderLoader->GET_SHADER_DATA( SetVectorToMatrixRows, true, 0, 0, 2 ),
+		runShader( shaderLoader->GET_SHADER_DATA( SetVectorToMatrixRows, true, 0, 0, 2, Ceil(matrixWidth, 4), matrixHeight, 1),
 			&param, sizeof( param ), 0, 0, 0, 0, bufs, sizes, 2, Ceil( matrixWidth, 4 ), matrixHeight, 1 );
 	}
 }
@@ -366,7 +366,7 @@ void CVulkanMathEngine::SetVectorToMatrixElements( const CFloatHandle& matrixHan
 
 	PARAM_STRUCT(SetVectorToMatrixElements) param = { width };
 
-	runShader( shaderLoader->GET_SHADER_DATA(SetVectorToMatrixElements, true, 0, 0, 4),
+	runShader( shaderLoader->GET_SHADER_DATA(SetVectorToMatrixElements, true, 0, 0, 4, vectorSize, 1, 1),
 		&param, sizeof(param), 0, 0, 0, 0, bufs, sizes, 4, vectorSize, 1, 1 );
 }
 
@@ -392,7 +392,7 @@ void CVulkanMathEngine::AddMatrixElementsToVector(const CConstFloatHandle& matri
 
     PARAM_STRUCT(AddMatrixElementsToVector) param = { height, width };
 
-	runShader( shaderLoader->GET_SHADER_DATA(AddMatrixElementsToVector, true, 0, 0, 3), &param, sizeof(param),
+	runShader( shaderLoader->GET_SHADER_DATA(AddMatrixElementsToVector, true, 0, 0, 3, Ceil(height, 4), 1, 1), &param, sizeof(param),
 		0, 0, 0, 0, bufs, sizes, 3, Ceil(height, 4), 1, 1 );
 }
 
@@ -405,7 +405,7 @@ void CVulkanMathEngine::AddMatrixElementsToVector(const CConstFloatHandle& matri
 
     PARAM_STRUCT(AddMatrixElementsToVectorEx) param = { vectorSize, width };
 
-	runShader( shaderLoader->GET_SHADER_DATA(AddMatrixElementsToVectorEx, true, 0, 0, 4), &param, sizeof(param),
+	runShader( shaderLoader->GET_SHADER_DATA(AddMatrixElementsToVectorEx, true, 0, 0, 4, Ceil(vectorSize, 4), 1, 1), &param, sizeof(param),
 		0, 0, 0, 0, bufs, sizes, 4, Ceil(vectorSize, 4), 1, 1 );
 }
 
@@ -423,7 +423,7 @@ void CVulkanMathEngine::MultiplyDiagMatrixByMatrixAndAdd( int batchSize, const C
 	PARAM_STRUCT(MultiplyDiagMatrixByMatrixAndAdd) param =
 		{ batchSize, firstSize, secondWidth };
 
-	runShader( shaderLoader->GET_SHADER_DATA(MultiplyDiagMatrixByMatrixAndAdd, true, 0, 0, 3),
+	runShader( shaderLoader->GET_SHADER_DATA(MultiplyDiagMatrixByMatrixAndAdd, true, 0, 0, 3, secondWidth, firstSize, 1),
 		&param, sizeof(param), 0, 0, 0, 0, bufs, sizes, 3, secondWidth, firstSize, 1 );
 }
 
@@ -438,7 +438,7 @@ void CVulkanMathEngine::FindMaxValueInRows( const CConstFloatHandle& matrixHandl
 	PARAM_STRUCT(FindMaxValueInRows) param =
 		{ matrixHeight, matrixWidth };
 
-	runShader( shaderLoader->GET_SHADER_DATA(FindMaxValueInRows, true, 0, 0, 3),
+	runShader( shaderLoader->GET_SHADER_DATA(FindMaxValueInRows, true, 0, 0, 3, 1, matrixHeight, 1),
 		&param, sizeof(param), 0, 0, 0, 0, bufs, sizes, 3, 1, matrixHeight, 1 );
 }
 
@@ -453,7 +453,7 @@ void CVulkanMathEngine::FindMaxValueInRows( const CConstFloatHandle& matrixHandl
 	PARAM_STRUCT(FindMaxValueInRowsNoIndices) param =
 		{ matrixHeight, matrixWidth };
 
-	runShader( shaderLoader->GET_SHADER_DATA(FindMaxValueInRowsNoIndices, true, 0, 0, 2),
+	runShader( shaderLoader->GET_SHADER_DATA(FindMaxValueInRowsNoIndices, true, 0, 0, 2, 1, matrixHeight, 1),
 		&param, sizeof(param), 0, 0, 0, 0, bufs, sizes, 2, 1, matrixHeight, 1 );
 }
 
@@ -468,7 +468,7 @@ void CVulkanMathEngine::FindMaxValueInColumns( int batchSize, const CConstFloatH
 	PARAM_STRUCT(FindMaxValueInColumns) param =
 		{ batchSize, matrixHeight, matrixWidth };
 
-	runShader( shaderLoader->GET_SHADER_DATA(FindMaxValueInColumns, true, 0, 0, 3),
+	runShader( shaderLoader->GET_SHADER_DATA(FindMaxValueInColumns, true, 0, 0, 3, matrixWidth, batchSize, 1),
 		&param, sizeof(param), 0, 0, 0, 0, bufs, sizes, 3, matrixWidth, batchSize, 1 );
 }
 
@@ -481,7 +481,7 @@ void CVulkanMathEngine::FindMinValueInColumns( const CConstFloatHandle& matrixHa
 	PARAM_STRUCT( FindMinValueInColumns ) param =
 		{ matrixHeight, matrixWidth };
 
-	runShader( shaderLoader->GET_SHADER_DATA( FindMinValueInColumns, true, 0, 0, 3 ),
+	runShader( shaderLoader->GET_SHADER_DATA( FindMinValueInColumns, true, 0, 0, 3, matrixWidth, 1, 1),
 		&param, sizeof( param ), 0, 0, 0, 0, bufs, sizes, 2, matrixWidth, 1, 1 );
 }
 
@@ -494,7 +494,7 @@ void CVulkanMathEngine::findMaxValueInColumns( const CFloatHandle& resultHandle,
 	PARAM_STRUCT(FindMaxValueInColumnsNoIndices) param =
 		{ matrixHeight, matrixWidth };
 
-	runShader( shaderLoader->GET_SHADER_DATA(FindMaxValueInColumnsNoIndices, true, 0, 0, 2),
+	runShader( shaderLoader->GET_SHADER_DATA(FindMaxValueInColumnsNoIndices, true, 0, 0, 2, matrixWidth, 1, 1),
 		&param, sizeof(param), 0, 0, 0, 0, bufs, sizes, 2, matrixWidth, 1, 1 );	
 }
 
@@ -514,7 +514,7 @@ void CVulkanMathEngine::VectorMultichannelLookupAndCopy( int batchSize, int chan
 		PARAM_STRUCT(VectorMultichannelLookupAndCopyFloat) param =
 			{ batchSize, i, channelCount, outputChannelCount, lookupDimensions[i].VectorSize, outputChannel };
 
-		runShader( shaderLoader->GET_SHADER_DATA(VectorMultichannelLookupAndCopyFloat, true, 0, 0, 3),
+		runShader( shaderLoader->GET_SHADER_DATA(VectorMultichannelLookupAndCopyFloat, true, 0, 0, 3, Ceil(batchSize, 4), lookupDimensions[i].VectorSize, 1),
 			&param, sizeof(param), 0, 0, 0, 0, bufs, sizes, 3, Ceil(batchSize, 4), lookupDimensions[i].VectorSize, 1 );	
         
         outputChannel += lookupDimensions[i].VectorSize;
@@ -527,7 +527,7 @@ void CVulkanMathEngine::VectorMultichannelLookupAndCopy( int batchSize, int chan
 		PARAM_STRUCT(VectorMultichannelCopyFloat) param =
 			{ batchSize, channelCount, outputChannelCount, lookupCount, outputChannel, channelCount - lookupCount };
 
-		runShader( shaderLoader->GET_SHADER_DATA(VectorMultichannelCopyFloat, true, 0, 0, 2),
+		runShader( shaderLoader->GET_SHADER_DATA(VectorMultichannelCopyFloat, true, 0, 0, 2, Ceil(batchSize, 4), channelCount - lookupCount, 1),
 			&param, sizeof(param), 0, 0, 0, 0, bufs, sizes, 2, Ceil(batchSize, 4), channelCount - lookupCount, 1 );	
 	}
 }
@@ -548,7 +548,7 @@ void CVulkanMathEngine::VectorMultichannelLookupAndCopy( int batchSize, int chan
 		PARAM_STRUCT(VectorMultichannelLookupAndCopyInt) param =
 			{ batchSize, i, channelCount, outputChannelCount, lookupDimensions[i].VectorSize, outputChannel };
 
-		runShader( shaderLoader->GET_SHADER_DATA(VectorMultichannelLookupAndCopyInt, true, 0, 0, 3),
+		runShader( shaderLoader->GET_SHADER_DATA(VectorMultichannelLookupAndCopyInt, true, 0, 0, 3, Ceil(batchSize, 4), lookupDimensions[i].VectorSize, 1),
 			&param, sizeof(param), 0, 0, 0, 0, bufs, sizes, 3, Ceil(batchSize, 4), lookupDimensions[i].VectorSize, 1 );	
         
         outputChannel += lookupDimensions[i].VectorSize;
@@ -561,7 +561,7 @@ void CVulkanMathEngine::VectorMultichannelLookupAndCopy( int batchSize, int chan
 		PARAM_STRUCT(VectorMultichannelCopyInt) param =
 			{ batchSize, channelCount, outputChannelCount, lookupCount, outputChannel, channelCount - lookupCount };
 
-		runShader( shaderLoader->GET_SHADER_DATA(VectorMultichannelCopyInt, true, 0, 0, 2),
+		runShader( shaderLoader->GET_SHADER_DATA(VectorMultichannelCopyInt, true, 0, 0, 2, Ceil(batchSize, 4), channelCount - lookupCount, 1),
 			&param, sizeof(param), 0, 0, 0, 0, bufs, sizes, 2, Ceil(batchSize, 4), channelCount - lookupCount, 1 );	
 	}
 }
@@ -593,8 +593,10 @@ void CVulkanMathEngine::RowMultiplyMatrixByMatrix( const CConstFloatHandle& firs
 
 	PARAM_STRUCT(RowMultiplyMatrixByMatrix) param = { height, width, yStep, xStep };
 
-	const CVulkanShaderData& shaderData = shaderLoader->GET_SHADER_DATA(RowMultiplyMatrixByMatrix, true, 0, 0, 3);
-
+	CVulkanShader shaderData = shaderLoader->GET_SHADER_DATA(RowMultiplyMatrixByMatrix, true, 0, 0, 3, 32, height, batchSize);
+	shaderData.GroupSizeX = 32;
+	shaderData.GroupSizeY = 32;
+	shaderData.GroupSizeZ = 1;
 	runShader( shaderData, &param, sizeof(param),
 		0, 0, 0, 0, bufs, sizes, 3, shaderData.GroupSizeX, height, batchSize );
 }
@@ -615,7 +617,7 @@ void CVulkanMathEngine::MatrixSpreadRows( const CConstFloatHandle& sourceHandle,
 
 	PARAM_STRUCT( MatrixSpreadRowsFloat ) param = { height, width };
 
-	runShader( shaderLoader->GET_SHADER_DATA( MatrixSpreadRowsFloat, true, 0, 0, 3 ), &param, sizeof( param ),
+	runShader( shaderLoader->GET_SHADER_DATA( MatrixSpreadRowsFloat, true, 0, 0, 3, Ceil(width, 8), height, 1), &param, sizeof( param ),
 		0, 0, 0, 0, bufs, sizes, 3, Ceil( width, 8 ), height, 1 );
 }
 
@@ -628,7 +630,7 @@ void CVulkanMathEngine::MatrixSpreadRowsAdd( const CConstFloatHandle& sourceHand
 
 	PARAM_STRUCT( MatrixSpreadRowsFloatAdd ) param = { height, width };
 
-	runShader( shaderLoader->GET_SHADER_DATA( MatrixSpreadRowsFloatAdd, true, 0, 0, 3 ), &param, sizeof( param ),
+	runShader( shaderLoader->GET_SHADER_DATA( MatrixSpreadRowsFloatAdd, true, 0, 0, 3, Ceil(width, 8), height, 1), &param, sizeof( param ),
 		0, 0, 0, 0, bufs, sizes, 3, Ceil( width, 8 ), height, 1 );
 }
 
@@ -648,7 +650,7 @@ void CVulkanMathEngine::MatrixSpreadRows( const CConstIntHandle& sourceHandle, i
 
 	PARAM_STRUCT(MatrixSpreadRowsInt) param = { height, width };
 
-	runShader( shaderLoader->GET_SHADER_DATA(MatrixSpreadRowsInt, true, 0, 0, 3), &param, sizeof(param),
+	runShader( shaderLoader->GET_SHADER_DATA(MatrixSpreadRowsInt, true, 0, 0, 3, Ceil(width, 8), height, 1), &param, sizeof(param),
 		0, 0, 0, 0, bufs, sizes, 3, Ceil(width, 8), height, 1 );
 }
 
@@ -661,7 +663,7 @@ void CVulkanMathEngine::SumMatrixRowsAdd( int batchSize, const CFloatHandle& res
 
 	PARAM_STRUCT(SumMatrixRows) param = { matrixWidth, matrixHeight, batchSize, 1 };
 
-	runShader(shaderLoader->GET_SHADER_DATA(SumMatrixRows, true, 0, 0, 2),
+	runShader(shaderLoader->GET_SHADER_DATA(SumMatrixRows, true, 0, 0, 2, matrixWidth, 1, batchSize),
 		&param, sizeof(param), 0, 0, 0, 0, bufs, sizes, 2, matrixWidth, 1, batchSize);
 }
 
@@ -674,7 +676,7 @@ void CVulkanMathEngine::SumMatrixRows( int batchSize, const CFloatHandle& result
 
 	PARAM_STRUCT(SumMatrixRows) param = { matrixWidth, matrixHeight, batchSize, 0 };
 
-	runShader(shaderLoader->GET_SHADER_DATA(SumMatrixRows, true, 0, 0, 2),
+	runShader(shaderLoader->GET_SHADER_DATA(SumMatrixRows, true, 0, 0, 2, matrixWidth, 1, batchSize),
 		&param, sizeof(param), 0, 0, 0, 0, bufs, sizes, 2, matrixWidth, 1, batchSize);
 }
 
@@ -686,7 +688,7 @@ void CVulkanMathEngine::SumMatrixColumns( const CFloatHandle& resultHandle, cons
 
 	PARAM_STRUCT(SumMatrixColumns) param = { matrixWidth, matrixHeight };
 
-	runShader(shaderLoader->GET_SHADER_DATA(SumMatrixColumns, true, 0, 0, 2),
+	runShader(shaderLoader->GET_SHADER_DATA(SumMatrixColumns, true, 0, 0, 2, matrixHeight, 1, 1),
 		&param, sizeof(param), 0, 0, 0, 0, bufs, sizes, 2, matrixHeight, 1, 1);
 }
 
@@ -700,8 +702,8 @@ void CVulkanMathEngine::MatrixLogSumExpByRows( const CConstFloatHandle& matrix, 
 
 	PARAM_STRUCT(MatrixLogSumExpByRows) param = { height, width };
 
-	const CVulkanShaderData& shaderData = shaderLoader->GET_SHADER_DATA(MatrixLogSumExpByRows, true, 0, 0, 2);
-	runShader( shaderData, &param, sizeof(param), 0, 0, 0, 0, bufs, sizes, 2, shaderData.GroupSizeX, height, 1 );
+	const CVulkanShader& shaderData = shaderLoader->GET_SHADER_DATA(MatrixLogSumExpByRows, true, 0, 0, 2, 32, height, 1);
+	runShader( shaderData, &param, sizeof(param), 0, 0, 0, 0, bufs, sizes, 2, 32, height, 1 );
 }
 
 void CVulkanMathEngine::MatrixSoftmaxByRows( const CConstFloatHandle& matrix, int height, int width, const CFloatHandle& result)
@@ -711,7 +713,7 @@ void CVulkanMathEngine::MatrixSoftmaxByRows( const CConstFloatHandle& matrix, in
 
 	PARAM_STRUCT(MatrixSoftmaxByRows) param = { height, width };
 
-	const CVulkanShaderData& shaderData = shaderLoader->GET_SHADER_DATA(MatrixSoftmaxByRows, true, 0, 0, 2);
+	const CVulkanShader& shaderData = shaderLoader->GET_SHADER_DATA(MatrixSoftmaxByRows, true, 0, 0, 2, 1, height, 1);
 	runShader( shaderData, &param, sizeof(param), 0, 0, 0, 0, bufs, sizes, 2, 1, height, 1 );
 }
 
@@ -733,7 +735,7 @@ void CVulkanMathEngine::MatrixSoftmaxByColumns( const CConstFloatHandle& matrix,
 
 	PARAM_STRUCT(MatrixSoftmaxByColumns) param = { height, width };
 
-	const CVulkanShaderData& shaderData = shaderLoader->GET_SHADER_DATA(MatrixSoftmaxByColumns, true, 0, 0, 2);
+	const CVulkanShader& shaderData = shaderLoader->GET_SHADER_DATA(MatrixSoftmaxByColumns, true, 0, 0, 2, width, 1, 1);
 	runShader( shaderData, &param, sizeof(param), 0, 0, 0, 0, bufs, sizes, 2, width, 1, 1 );
 }
 
@@ -762,7 +764,7 @@ void CVulkanMathEngine::MultiplyMatrixByDiagMatrix( const CConstFloatHandle& fir
 		PARAM_STRUCT( MultiplyMatrixByDiagMatrixAdreno ) param =
 		{ batchSize, secondBatchSize, firstHeight, firstWidth, ( toAdd ? 1 : 0 ) };
 
-		runShader( shaderLoader->GET_SHADER_DATA( MultiplyMatrixByDiagMatrixAdreno, true, 0, 1, 2 ),
+		runShader( shaderLoader->GET_SHADER_DATA( MultiplyMatrixByDiagMatrixAdreno, true, 0, 1, 2, Ceil(firstWidth, 4), batchSize * firstHeight, 1),
 			&param, sizeof( param ), 0, 0, samplers, 1, bufs, sizes, 2, Ceil( firstWidth, 4 ), batchSize * firstHeight, 1 );
 	} else {
 		CMemoryHandle bufs[3] = { firstHandle, secondHandle, resultHandle };
@@ -771,7 +773,7 @@ void CVulkanMathEngine::MultiplyMatrixByDiagMatrix( const CConstFloatHandle& fir
 		PARAM_STRUCT( MultiplyMatrixByDiagMatrix ) param =
 		{ batchSize, secondBatchSize, firstHeight, firstWidth, ( toAdd ? 1 : 0 ) };
 
-		runShader( shaderLoader->GET_SHADER_DATA( MultiplyMatrixByDiagMatrix, true, 0, 0, 3 ),
+		runShader( shaderLoader->GET_SHADER_DATA( MultiplyMatrixByDiagMatrix, true, 0, 0, 3, Ceil(firstWidth, 4), batchSize * firstHeight, 1),
 			&param, sizeof( param ), 0, 0, 0, 0, bufs, sizes, 3, Ceil( firstWidth, 4 ), batchSize * firstHeight, 1 );
 	}
 }
@@ -796,7 +798,7 @@ void CVulkanMathEngine::multiplyMatrixByMatrix( bool toAdd, int batchSize, const
 	if( firstHeight >= 4 && secondWidth >= 4 ) {
 		PARAM_STRUCT(MultiplyMatrixByMatrix) param = { batchSize, firstHeight, firstWidth, firstRowSize,
 			secondWidth, secondRowSize, resultRowSize, toAdd ? 1 : 0 };
-		runShader(shaderLoader->GET_SHADER_DATA(MultiplyMatrixByMatrix, true, 0, 0, 3),
+		runShader(shaderLoader->GET_SHADER_DATA(MultiplyMatrixByMatrix, true, 0, 0, 3, secondWidth / 4, firstHeight / 4, batchSize),
 			&param, sizeof(param), 0, 0, 0, 0, bufs, sizes, 3, secondWidth / 4, firstHeight / 4, batchSize);
 	}
 
@@ -806,7 +808,7 @@ void CVulkanMathEngine::multiplyMatrixByMatrix( bool toAdd, int batchSize, const
     if( count > 0 ) {
 		PARAM_STRUCT(BatchMultiplyMatrixByMatrixBorders) param = { batchSize, firstHeight, firstWidth, firstRowSize, 
 			secondWidth, secondRowSize, resultRowSize, leftOffset, topOffset, toAdd ? 1 : 0 };
-		runShader( shaderLoader->GET_SHADER_DATA(BatchMultiplyMatrixByMatrixBorders, true, 0, 0, 3),
+		runShader( shaderLoader->GET_SHADER_DATA(BatchMultiplyMatrixByMatrixBorders, true, 0, 0, 3, count, batchSize, 1),
 			&param, sizeof(param), 0, 0, 0, 0, bufs, sizes, 3, count, batchSize, 1 );
 	}
 }
@@ -828,7 +830,7 @@ void CVulkanMathEngine::batchMultiplyMatrixByTransposedMatrix( bool toAdd, int b
 	if( firstHeight >= 4 && secondHeight >= 4 ) {
 		PARAM_STRUCT(BatchMultiplyMatrixByTransposedMatrix) param = { batchSize, firstHeight, firstWidth, firstRowSize,
 			secondHeight, secondRowSize, resultRowSize,  ( toAdd ) ? 1 : 0 };
-		runShader( shaderLoader->GET_SHADER_DATA( BatchMultiplyMatrixByTransposedMatrix, true, 0, 0, 3),
+		runShader( shaderLoader->GET_SHADER_DATA( BatchMultiplyMatrixByTransposedMatrix, true, 0, 0, 3, firstHeight / 4, secondHeight / 4, batchSize),
 			&param, sizeof(param), 0, 0, 0, 0, bufs, sizes, 3, firstHeight / 4, secondHeight / 4, batchSize );
 	}
 
@@ -838,7 +840,7 @@ void CVulkanMathEngine::batchMultiplyMatrixByTransposedMatrix( bool toAdd, int b
 	if( count > 0 ) {
 		PARAM_STRUCT(BatchMultiplyMatrixByTransposedMatrixBorders) param = { batchSize, firstHeight, firstWidth, firstRowSize,
 			secondHeight, secondRowSize, resultRowSize, leftOffset, topOffset, toAdd };
-		runShader( shaderLoader->GET_SHADER_DATA(BatchMultiplyMatrixByTransposedMatrixBorders, true, 0, 0, 3),
+		runShader( shaderLoader->GET_SHADER_DATA(BatchMultiplyMatrixByTransposedMatrixBorders, true, 0, 0, 3, count, batchSize, 1),
 			&param, sizeof(param), 0, 0, 0, 0, bufs, sizes, 3, count, batchSize, 1 );
 	}
 }
@@ -862,7 +864,7 @@ void CVulkanMathEngine::blobConvolution1x1s1( int batchSize, const CConstFloatHa
 	if( firstHeight >= 4 && secondHeight >= 4 ) {
 		PARAM_STRUCT( BatchInitAddMultiplyMatrixByTransposedMatrix ) param = { batchSize, firstHeight, firstWidth, firstRowSize,
 			secondHeight, secondRowSize, resultRowSize };
-		runShader( shaderLoader->GET_SHADER_DATA( BatchInitAddMultiplyMatrixByTransposedMatrix, true, 0, 0, 4 ),
+		runShader( shaderLoader->GET_SHADER_DATA( BatchInitAddMultiplyMatrixByTransposedMatrix, true, 0, 0, 4, firstHeight / 4, secondHeight / 4, batchSize),
 			&param, sizeof( param ), 0, 0, 0, 0, bufs, sizes, 4, firstHeight / 4, secondHeight / 4, batchSize );
 	}
 
@@ -872,7 +874,7 @@ void CVulkanMathEngine::blobConvolution1x1s1( int batchSize, const CConstFloatHa
 	if( count > 0 ) {
 		PARAM_STRUCT( BatchInitMultiplyMatrixByTransposedMatrixBorders ) param = { batchSize, firstHeight, firstWidth, firstRowSize,
 			secondHeight, secondRowSize, resultRowSize, leftOffset, topOffset };
-		runShader( shaderLoader->GET_SHADER_DATA( BatchInitMultiplyMatrixByTransposedMatrixBorders, true, 0, 0, 4 ),
+		runShader( shaderLoader->GET_SHADER_DATA( BatchInitMultiplyMatrixByTransposedMatrixBorders, true, 0, 0, 4, count, batchSize, 1),
 			&param, sizeof( param ), 0, 0, 0, 0, bufs, sizes, 4, count, batchSize, 1 );
 	}
 }
@@ -894,7 +896,7 @@ void CVulkanMathEngine::batchMultiplyTransposedMatrixByMatrix( bool toAdd, int b
 	if( firstWidth >= 4 && secondWidth >= 4 ) {
 		PARAM_STRUCT(BatchMultiplyTransposedMatrixByMatrix) param = { batchSize, firstHeight, firstWidth, firstRowSize,
 			secondWidth, secondRowSize, resultRowSize, toAdd ? 1 : 0 };
-		runShader(shaderLoader->GET_SHADER_DATA(BatchMultiplyTransposedMatrixByMatrix, true, 0, 0, 3),
+		runShader(shaderLoader->GET_SHADER_DATA(BatchMultiplyTransposedMatrixByMatrix, true, 0, 0, 3, secondWidth / 4, firstWidth / 4, batchSize),
 			&param, sizeof(param), 0, 0, 0, 0, bufs, sizes, 3, secondWidth / 4, firstWidth / 4, batchSize);
 	}
 
@@ -904,7 +906,7 @@ void CVulkanMathEngine::batchMultiplyTransposedMatrixByMatrix( bool toAdd, int b
 	if( count > 0 ) {
 		PARAM_STRUCT(BatchMultiplyTransposedMatrixByMatrixBorders) param = { batchSize, firstHeight, firstWidth, firstRowSize, 
 			secondWidth, secondRowSize, resultRowSize, leftOffset, topOffset, toAdd ? 1 : 0 };
-		runShader( shaderLoader->GET_SHADER_DATA(BatchMultiplyTransposedMatrixByMatrixBorders, true, 0, 0, 3),
+		runShader( shaderLoader->GET_SHADER_DATA(BatchMultiplyTransposedMatrixByMatrixBorders, true, 0, 0, 3, count, batchSize, 1),
 			&param, sizeof(param), 0, 0, 0, 0, bufs, sizes, 3, count, batchSize, 1 );
 	}
 }
@@ -953,7 +955,7 @@ void CVulkanMathEngine::matrixToInterleavedAdreno( int batchSize, CConstFloatHan
 	PARAM_STRUCT( Matrix2InterleavedAdreno ) param = { { chunkX, chunkY }, batchSize, height, width, rowSize,
 		(isTrans ? 1 : 0) };
 
-	runShader( shaderLoader->GET_SHADER_DATA( Matrix2InterleavedAdreno, true, 1, 0, 1),
+	runShader( shaderLoader->GET_SHADER_DATA( Matrix2InterleavedAdreno, true, 1, 0, 1, resWidth4, batchSize * resHeight4, 1),
 		&param, sizeof(param), images, 1, 0, 0, bufs, sizes, 1, resWidth4, batchSize * resHeight4, 1 );
 
 	result = { images[0], chunkX, chunkY };
@@ -1008,7 +1010,7 @@ void CVulkanMathEngine::batchMultiplyMatrixByMatrixAdreno( bool toAdd, int batch
 		{ { imageFirst.ChunkX, imageFirst.ChunkY }, { imageSecond.ChunkX, imageSecond.ChunkY },
 			batchSize, resHeight, medium4, resWidth, (toAdd ? 1 : 0), resultRowSize };
 
-		runShader( shaderLoader->GET_SHADER_DATA( MultiplyMatrixInterleavedAdreno, true, 0, 2, 1),
+		runShader( shaderLoader->GET_SHADER_DATA( MultiplyMatrixInterleavedAdreno, true, 0, 2, 1, resWidth4Low, batchSize * resHeight4Low, 1),
 			&param, sizeof(param), 0, 0, samplers, 2, bufs, sizes, 1, resWidth4Low, batchSize * resHeight4Low, 1 );
 	}
 
@@ -1019,7 +1021,7 @@ void CVulkanMathEngine::batchMultiplyMatrixByMatrixAdreno( bool toAdd, int batch
 			batchSize, resHeight, medium4, resWidth, (toAdd ? 1 : 0), resultRowSize,
 			0, resWidth4Low, resHeight4Low, resHeight4 };
 
-		runShader( shaderLoader->GET_SHADER_DATA( MultiplyMatrixInterleavedBoardersAdreno, true, 0, 2, 1),
+		runShader( shaderLoader->GET_SHADER_DATA( MultiplyMatrixInterleavedBoardersAdreno, true, 0, 2, 1, resWidth4Low, batchSize, 1),
 			&param, sizeof(param), 0, 0, samplers, 2, bufs, sizes, 1, resWidth4Low, batchSize, 1 );
 	}
 
@@ -1030,7 +1032,7 @@ void CVulkanMathEngine::batchMultiplyMatrixByMatrixAdreno( bool toAdd, int batch
 			batchSize, resHeight, medium4, resWidth, (toAdd ? 1 : 0), resultRowSize,
 			resWidth4Low, resWidth4, 0, resHeight4Low };
 
-		runShader( shaderLoader->GET_SHADER_DATA( MultiplyMatrixInterleavedBoardersAdreno, true, 0, 2, 1),
+		runShader( shaderLoader->GET_SHADER_DATA( MultiplyMatrixInterleavedBoardersAdreno, true, 0, 2, 1, 1, batchSize * resHeight4Low, 1),
 			&param, sizeof(param), 0, 0, samplers, 2, bufs, sizes, 1, 1, batchSize * resHeight4Low, 1 );
 	}
 
@@ -1041,7 +1043,7 @@ void CVulkanMathEngine::batchMultiplyMatrixByMatrixAdreno( bool toAdd, int batch
 			batchSize, resHeight, medium4, resWidth, (toAdd ? 1 : 0), resultRowSize,
 			resWidth4Low, resWidth4, resHeight4Low, resHeight4 };
 
-		runShader( shaderLoader->GET_SHADER_DATA( MultiplyMatrixInterleavedBoardersAdreno, true, 0, 2, 1),
+		runShader( shaderLoader->GET_SHADER_DATA( MultiplyMatrixInterleavedBoardersAdreno, true, 0, 2, 1, 1, batchSize, 1),
 			&param, sizeof(param), 0, 0, samplers, 2, bufs, sizes, 1, 1, batchSize, 1 );
 	}
 }
@@ -1055,7 +1057,7 @@ void CVulkanMathEngine::LookupAndSum(const CConstIntHandle& indicesHandle, int b
 
 	PARAM_STRUCT(LookupAndSum) param = { batchSize, indexCount, vectorSize };
 
-	runShader( shaderLoader->GET_SHADER_DATA(LookupAndSum, true, 0, 0, 3), &param, sizeof(param),
+	runShader( shaderLoader->GET_SHADER_DATA(LookupAndSum, true, 0, 0, 3, vectorSize, batchSize, 1), &param, sizeof(param),
 		0, 0, 0, 0, bufs, sizes, 3, vectorSize, batchSize, 1 );
 }
 
@@ -1074,7 +1076,7 @@ void CVulkanMathEngine::EnumBinarization( int batchSize, const CConstFloatHandle
 
     PARAM_STRUCT(EnumBinarizationFloat) param = { batchSize, enumSize };
 
-	runShader( shaderLoader->GET_SHADER_DATA(EnumBinarizationFloat, true, 0, 0, 2), &param, sizeof(param),
+	runShader( shaderLoader->GET_SHADER_DATA(EnumBinarizationFloat, true, 0, 0, 2, Ceil(batchSize, 4), 1, 1), &param, sizeof(param),
 		0, 0, 0, 0, bufs, sizes, 2, Ceil(batchSize, 4), 1, 1 );
 }
 
@@ -1088,7 +1090,7 @@ void CVulkanMathEngine::EnumBinarization( int batchSize, const CConstIntHandle& 
 
     PARAM_STRUCT(EnumBinarizationInt) param = { batchSize, enumSize };
 
-	runShader( shaderLoader->GET_SHADER_DATA(EnumBinarizationInt, true, 0, 0, 2), &param, sizeof(param),
+	runShader( shaderLoader->GET_SHADER_DATA(EnumBinarizationInt, true, 0, 0, 2, Ceil(batchSize, 4), 1, 1), &param, sizeof(param),
 		0, 0, 0, 0, bufs, sizes, 2, Ceil(batchSize, 4), 1, 1 );
 }
 
@@ -1103,7 +1105,7 @@ void CVulkanMathEngine::BitSetBinarization( int batchSize, int bitSetSize,
 
     PARAM_STRUCT(BitSetBinarization) param = { bitSetSize, outputVectorSize };
 
-	runVectorShader( shaderLoader->GET_SHADER_DATA(BitSetBinarization, true, 0, 0, 2), &param, sizeof(param),
+	runVectorShader( shaderLoader->GET_SHADER_DATA(BitSetBinarization, true, 0, 0, 2, Ceil(batchSize * outputVectorSize, 4), 1, 1), &param, sizeof(param),
 		0, 0, 0, 0, bufs, sizes, 2, Ceil(batchSize * outputVectorSize , 4) );
 }
 

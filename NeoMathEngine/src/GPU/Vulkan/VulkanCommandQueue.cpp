@@ -71,7 +71,7 @@ CVulkanCommandQueue::~CVulkanCommandQueue()
 	// The queue does not need to be closed with this API
 }
 
-void CVulkanCommandQueue::RunComputeShader( const CVulkanShaderData& shader, int countX, int countY, int countZ,
+void CVulkanCommandQueue::RunComputeShader( const CVulkanShader& shader, int countX, int countY, int countZ,
 	const void* paramsBuffer, int paramsSize, const CVulkanImage** images, int imageCount,
 	const CVulkanImage** samplers, int samplerCount, const CMemoryHandle* dataBuffers, const size_t* dataSizes, int dataBufferCount )
 {

@@ -28,7 +28,7 @@ limitations under the License.
 
 namespace NeoML {
 
-struct CVulkanShaderData;
+struct CVulkanShader;
 struct CVulkanDevice;
 class CVulkanImage;
 
@@ -52,7 +52,7 @@ public:
 	~CVulkanCommandQueue();
 
 	// Add a shader to the compute queue
-	void RunComputeShader( const CVulkanShaderData& shader, int countX, int countY, int countZ,
+	void RunComputeShader( const CVulkanShader& shader, int countX, int countY, int countZ,
 		const void* param, int paramSize,
 		const CVulkanImage** images, int imageCount,
 		const CVulkanImage** samplers, int samplerCount,

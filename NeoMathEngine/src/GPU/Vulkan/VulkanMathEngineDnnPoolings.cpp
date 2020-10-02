@@ -66,7 +66,7 @@ void CVulkanMathEngine::BlobMaxPooling( const CMaxPoolingDesc& poolingDesc, cons
 		result.ObjectCount(), result.Channels() * result.Depth(), result.Height(), result.Width(),
 		source.Height(), source.Width() };
 
-	runShader(shaderLoader->GET_SHADER_DATA(BlobMaxPooling, true, 0, 0, 2),
+	runShader(shaderLoader->GET_SHADER_DATA(BlobMaxPooling, true, 0, 0, 2, result.Width(), result.ObjectCount() * result.Height(), result.Channels() * result.Depth()),
 		&param, sizeof(param), 0, 0, 0, 0, bufs, sizes, 2,
 		result.Width(), result.ObjectCount() * result.Height(), result.Channels() * result.Depth());
 }
@@ -112,7 +112,7 @@ void CVulkanMathEngine::Blob3dMaxPooling( const C3dMaxPoolingDesc& poolingDesc, 
 		result.Channels(), result.ObjectCount()
 	};
 
-	runShader(shaderLoader->GET_SHADER_DATA(Blob3dMaxPoolingNoIndices, true, 0, 0, 2),
+	runShader(shaderLoader->GET_SHADER_DATA(Blob3dMaxPoolingNoIndices, true, 0, 0, 2, result.Width() * result.Height() * result.Depth(), result.Channels(), result.ObjectCount()),
 		&param, sizeof(param), 0, 0, 0, 0, bufs, sizes, 2,
 		result.Width() * result.Height() * result.Depth(), result.Channels(), result.ObjectCount());
 }
@@ -157,7 +157,7 @@ void CVulkanMathEngine::Blob3dMeanPooling( const C3dMeanPoolingDesc& poolingDesc
 		result.Channels(), result.ObjectCount()
 	};
 
-	runShader( shaderLoader->GET_SHADER_DATA(Blob3dMeanPooling, true, 0, 0, 2),
+	runShader( shaderLoader->GET_SHADER_DATA(Blob3dMeanPooling, true, 0, 0, 2, result.Width() * result.Height() * result.Depth(), result.Channels(), result.ObjectCount()),
 		&param, sizeof(param), 0, 0, 0, 0, bufs, sizes, 2,
 		result.Width() * result.Height() * result.Depth(), result.Channels(), result.ObjectCount() );
 }
@@ -201,9 +201,9 @@ void CVulkanMathEngine::BlobMaxOverTimePooling( const CMaxOverTimePoolingDesc& p
 		result.BlobSize(), result.BatchWidth(), result.ObjectSize(), desc.FilterLen, desc.StrideLen
 	};
 
-	runShader( shaderLoader->GET_SHADER_DATA(BlobMaxOverTimePoolingNoIndices, true, 0, 0, 2),
+	runShader( shaderLoader->GET_SHADER_DATA(BlobMaxOverTimePoolingNoIndices, true, 0, 0, 2, result.BlobSize(), 1, 1),
 		&param, sizeof(param), 0, 0, 0, 0, bufs, sizes, 2,
-		result.BlobSize(), 1, 1 );
+		result.BlobSize(), 1, 1);
 }
 
 void CVulkanMathEngine::BlobMaxOverTimePoolingBackward( const CMaxOverTimePoolingDesc&, const CFloatHandle&,
@@ -247,7 +247,7 @@ void CVulkanMathEngine::BlobGlobalMaxPooling( const CGlobalMaxPoolingDesc& pooli
 	PARAM_STRUCT(BlobGlobalMaxPooling) param =
 		{ maxCount, source.ObjectCount(), source.Channels(), poolSize * source.Channels(), maxCount * result.Channels(), poolSize };
 
-	runShader( shaderLoader->GET_SHADER_DATA(BlobGlobalMaxPooling, true, 0, 0, 3),
+	runShader( shaderLoader->GET_SHADER_DATA(BlobGlobalMaxPooling, true, 0, 0, 3, result.ObjectCount(), result.Channels(), 1),
 		&param, sizeof(param), 0, 0, 0, 0, bufs, sizes, 3, result.ObjectCount(), result.Channels(), 1 );
 }
 
@@ -284,7 +284,7 @@ void CVulkanMathEngine::BlobMeanPooling( const CMeanPoolingDesc& poolingDesc, co
 		result.ObjectCount(), result.Channels() * result.Depth(), result.Height(), result.Width(),
 		source.Height(), source.Width() };
 
-	runShader( shaderLoader->GET_SHADER_DATA(BlobMeanPooling, true, 0, 0, 2),
+	runShader( shaderLoader->GET_SHADER_DATA(BlobMeanPooling, true, 0, 0, 2, result.Width(), result.ObjectCount() * result.Height(), result.Channels() * result.Depth()),
 		&param, sizeof(param), 0, 0, 0, 0, bufs, sizes, 2,
 		result.Width(), result.ObjectCount() * result.Height(), result.Channels() * result.Depth() );
 }

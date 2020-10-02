@@ -33,7 +33,7 @@ namespace NeoML {
 
 struct CCommonConvolutionDesc;
 struct CInterleavedMatrixDesc;
-struct CVulkanShaderData;
+struct CVulkanShader;
 struct CVulkanDevice;
 struct CVulkanRleConvolutionDesc;
 class CVulkanCommandQueue;
@@ -483,12 +483,12 @@ private:
 	const CVulkanImage* getTmpImage( TTmpVulkanImage imageId, int width, int height );
 	const CVulkanImage* getTmpImage( TTmpVulkanImage imageId );
 
-	void runShader( const CVulkanShaderData& shader, const void* param, int paramSize,
+	void runShader( const CVulkanShader& shader, const void* param, int paramSize,
 		const CVulkanImage** images, int imageCount, const CVulkanImage** samplers, int samplerCount,
 		const CMemoryHandle* dataBuffers, const size_t* dataSizes, int dataBufferCount,
 		int countX, int countY, int countZ );
 
-	void runVectorShader( const CVulkanShaderData& shader, const void* param, int paramSize,
+	void runVectorShader( const CVulkanShader& shader, const void* param, int paramSize,
 		const CVulkanImage** images, int imageCount, const CVulkanImage** samplers, int samplerCount,
 		const CMemoryHandle* dataBuffers, const size_t* dataSizes, int dataBufferCount, int count );
 

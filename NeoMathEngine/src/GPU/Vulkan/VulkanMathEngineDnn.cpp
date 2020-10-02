@@ -92,7 +92,7 @@ void CVulkanMathEngine::blobMergeByDim(int dimNum, const CBlobDesc* from, const 
 			height
 		};
 
-		runShader( shaderLoader->GET_SHADER_DATA(BlobMergeByDim, true, 0, 0, 2),
+		runShader( shaderLoader->GET_SHADER_DATA(BlobMergeByDim, true, 0, 0, 2, fromArr.Widths[i], heightNorm, 1 ),
 			&param, sizeof(param), 0, 0, 0, 0, bufs, sizes, 2, fromArr.Widths[i], heightNorm, 1 );
 
         wStart += fromArr.Widths[i];
@@ -141,7 +141,7 @@ void CVulkanMathEngine::blobSplitByDim(int dimNum, const CBlobDesc& from, const 
 			height
 		};
 
-		runShader( shaderLoader->GET_SHADER_DATA(BlobSplitByDim, true, 0, 0, 2),
+		runShader( shaderLoader->GET_SHADER_DATA(BlobSplitByDim, true, 0, 0, 2, toArr.Widths[i], heightNorm, 1),
 			&param, sizeof(param), 0, 0, 0, 0, bufs, sizes, 2, toArr.Widths[i], heightNorm, 1 );
 
         wStart += toArr.Widths[i];
@@ -186,7 +186,7 @@ void CVulkanMathEngine::BlobResizeImage( const CBlobDesc& from, const CFloatHand
 	PARAM_STRUCT(BlobResizeImage) param =
 		{ from.ObjectCount(), totalChannels, from.Height(), from.Width(), to.Height(), to.Width(), deltaLeft, deltaRight, deltaTop, deltaBottom, defaultValue };
 
-	runShader( shaderLoader->GET_SHADER_DATA(BlobResizeImage, true, 0, 0, 2),
+	runShader( shaderLoader->GET_SHADER_DATA(BlobResizeImage, true, 0, 0, 2, Ceil(geom, BlobResizeImageCombine), totalChannels, to.ObjectCount()),
 		&param, sizeof(param), 0, 0, 0, 0, bufs, sizes, 2, Ceil(geom, BlobResizeImageCombine), totalChannels, to.ObjectCount() );
 }
 
@@ -200,7 +200,7 @@ void CVulkanMathEngine::BlobGetSubSequence( const CBlobDesc& from, const CFloatH
 		PARAM_STRUCT(BlobGetSubSequenceNoIndices) param =
 			{ from.ListSize(), from.BatchWidth(), to.BatchLength(), to.ObjectSize(), startPos, isRev ? 1 : 0 };
 
-		runShader( shaderLoader->GET_SHADER_DATA(BlobGetSubSequenceNoIndices, true, 0, 0, 2),
+		runShader( shaderLoader->GET_SHADER_DATA(BlobGetSubSequenceNoIndices, true, 0, 0, 2, Ceil(to.ObjectSize(), 16), to.BatchWidth() * to.ListSize(), to.BatchLength()),
 			&param, sizeof(param), 0, 0, 0, 0, bufs, sizes, 2, Ceil(to.ObjectSize(), 16), to.BatchWidth() * to.ListSize(), to.BatchLength() );
 	} else {
 		CMemoryHandle bufs[3] = { fromData, indexHandle, toData };
@@ -209,7 +209,7 @@ void CVulkanMathEngine::BlobGetSubSequence( const CBlobDesc& from, const CFloatH
 		PARAM_STRUCT(BlobGetSubSequence) param =
 			{ from.ListSize(), from.BatchWidth(), to.BatchLength(), to.ObjectSize(), startPos, isRev ? 1 : 0 };
 
-		runShader( shaderLoader->GET_SHADER_DATA(BlobGetSubSequence, true, 0, 0, 3),
+		runShader( shaderLoader->GET_SHADER_DATA(BlobGetSubSequence, true, 0, 0, 3, Ceil(to.ObjectSize(), 16), to.BatchWidth() * to.ListSize(), to.BatchLength()),
 			&param, sizeof(param), 0, 0, 0, 0, bufs, sizes, 3, Ceil(to.ObjectSize(), 16), to.BatchWidth() * to.ListSize(), to.BatchLength() );
 	}
 }
@@ -240,7 +240,7 @@ void CVulkanMathEngine::Upsampling2DForward( const CBlobDesc& input, const CFloa
 		resultRowSize,
 	};
 
-	runShader( shaderLoader->GET_SHADER_DATA(Upsampling2DForward, true, 0, 0, 2), &param, sizeof(param),
+	runShader( shaderLoader->GET_SHADER_DATA(Upsampling2DForward, true, 0, 0, 2, resultRowSize, resultHeight, 1), &param, sizeof(param),
 		0, 0, 0, 0, bufs, sizes, 2, resultRowSize, resultHeight, 1 );
 }
 
@@ -256,7 +256,7 @@ void CVulkanMathEngine::BuildIntegerHist( const CConstIntHandle& numbersHandle, 
 	CMemoryHandle bufs[2] = { numbersHandle, resultHandle };
 	size_t sizes[2] = { numbersCount * sizeof(int), maxNumber * sizeof(float) };
 
-	runVectorShader( shaderLoader->GET_SHADER_DATA(BuildIntegerHist, true, 0, 0, 2), 0, 0,
+	runVectorShader( shaderLoader->GET_SHADER_DATA(BuildIntegerHist, true, 0, 0, 2, numbersCount, 1,1), 0, 0,
 		0, 0, 0, 0, bufs, sizes, 2, numbersCount );
 }
 
@@ -276,7 +276,7 @@ void CVulkanMathEngine::Reorg( const CBlobDesc& source, const CFloatHandle& sour
 	PARAM_STRUCT( BlobReorgFloat ) param = { source.ObjectCount(), input.Height(), input.Width(), input.Channels(),
 		stride, input.Channels() / ( stride * stride ), isForward ? 1 : 0 };
 
-	runShader( shaderLoader->GET_SHADER_DATA( BlobReorgFloat, true, 0, 0, 2 ),
+	runShader( shaderLoader->GET_SHADER_DATA( BlobReorgFloat, true, 0, 0, 2, input.BatchWidth() * input.Height(), input.Channels() * input.Width(), 1),
 		&param, sizeof( param ), 0, 0, 0, 0, bufs, sizes, 2, input.BatchWidth() * input.Height(), input.Channels() * input.Width(), 1 );
 }
 
@@ -290,7 +290,7 @@ void CVulkanMathEngine::Reorg( const CBlobDesc& source, const CIntHandle& source
 	PARAM_STRUCT( BlobReorgInt ) param = { source.ObjectCount(), input.Height(), input.Width(), input.Channels(),
 		stride,  input.Channels() / ( stride * stride ), isForward ? 1 : 0 };
 
-	runShader( shaderLoader->GET_SHADER_DATA( BlobReorgInt, true, 0, 0, 2 ),
+	runShader( shaderLoader->GET_SHADER_DATA( BlobReorgInt, true, 0, 0, 2 , input.BatchWidth() * input.Height(), input.Channels() * input.Width(), 1),
 		&param, sizeof( param ), 0, 0, 0, 0, bufs, sizes, 2, input.BatchWidth() * input.Height(), input.Channels() * input.Width(), 1 );
 }
 
@@ -358,7 +358,7 @@ void CVulkanMathEngine::Dropout( const CDropoutDesc& dropoutDesc, const CFloatHa
 		maskObjectSize, 
 	};
 
-	runShader( shaderLoader->GET_SHADER_DATA(BlobSpatialDropout, true, 0, 0, 3), &param, sizeof(param),
+	runShader( shaderLoader->GET_SHADER_DATA(BlobSpatialDropout, true, 0, 0, 3, maskObjectSize, input.ObjectSize() / maskObjectSize, input.ObjectCount()), &param, sizeof(param),
 		0, 0, 0, 0, bufs, sizes, 3, maskObjectSize, input.ObjectSize() / maskObjectSize, input.ObjectCount() );
 }
 

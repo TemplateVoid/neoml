@@ -123,7 +123,7 @@ void CVulkanMathEngine::blobConvertFromRleCommon( const CVulkanRleConvolutionDes
 		desc.NonStrokeValue
 	};
 
-	runShader( shaderLoader->GET_SHADER_DATA( BlobConvertFromRLE, true, 0, 0, 2),
+	runShader( shaderLoader->GET_SHADER_DATA( BlobConvertFromRLE, true, 0, 0, 2, source.Height(), source.ObjectCount(), 1),
 		&param, sizeof(param), 0, 0, 0, 0, bufs, sizes, 2,
 		source.Height(), source.ObjectCount(), 1 );
 }
@@ -208,7 +208,7 @@ void CVulkanMathEngine::BlobTimeConvolution( const CTimeConvolutionDesc& convDes
 		PARAM_STRUCT(BlobTimeConvolutionPrepare) param = { source.BatchLength(), source.BatchWidth(), source.ObjectSize(), 
 			result.BatchLength(), result.BatchWidth(), filter.Height(), desc.Stride, desc.Padding, desc.Dilation };
 
-		runShader( shaderLoader->GET_SHADER_DATA(BlobTimeConvolutionPrepare, true, 0, 0, 2),
+		runShader( shaderLoader->GET_SHADER_DATA(BlobTimeConvolutionPrepare, true, 0, 0, 2, filter.Height(), result.BatchLength(), Ceil(source.BatchWidth() * source.ObjectSize(), 16 ) ),
 			&param, sizeof(param), 0, 0, 0, 0, bufs, sizes, 2,
 			filter.Height(), result.BatchLength(), Ceil( source.BatchWidth() * source.ObjectSize(), 16 ) );
 
@@ -272,7 +272,7 @@ void CVulkanMathEngine::Blob3dConvolution( const C3dConvolutionDesc& convDesc, c
 		filter.Height(), filter.Width(), filter.Depth(), filter.ObjectCount(),
 		result.Height(), result.Width(), result.Depth(), result.ObjectCount() };
 
-	runShader( shaderLoader->GET_SHADER_DATA(Blob3dConvolution, true, 0, 0, 4),
+	runShader( shaderLoader->GET_SHADER_DATA(Blob3dConvolution, true, 0, 0, 4, result.Width(), result.Height(), result.Channels() * result.ObjectCount() * result.Depth()),
 		&param, sizeof(param), 0, 0, 0, 0, bufs, sizes, 4,
 		result.Width(), result.Height(), result.Channels() * result.ObjectCount() * result.Depth() );
 }
@@ -311,7 +311,7 @@ void CVulkanMathEngine::Blob3dConvolutionBackward( const C3dConvolutionDesc& con
 			source.Height(), source.Width(), source.Depth(),
 		};
 
-		runShader( shaderLoader->GET_SHADER_DATA(Blob3dConvolutionBackward, true, 0, 0, 3),
+		runShader( shaderLoader->GET_SHADER_DATA(Blob3dConvolutionBackward, true, 0, 0, 3, result.Depth(), result.Height(), 1),
 			&param, sizeof(param), 0, 0, 0, 0, bufs, sizes, 3,
 			result.Depth(), result.Height(), 1 );
     }
@@ -462,7 +462,7 @@ void CVulkanMathEngine::BlobConvolutionBackward( const CConvolutionDesc& convDes
 			outputDiff.Width(), outputDiff.Height(), outputDiff.ObjectCount(), inputDiff.Width(), inputDiff.Height(),
 			inputChannels, filter.Width(), filter.Height(), outputChannels4, 0, outputDiffChannelGroupSize };
 
-		runShader( shaderLoader->GET_SHADER_DATA( BlobConvolutionBackwardAdreno, true, 0, 3, 1 ),
+		runShader( shaderLoader->GET_SHADER_DATA( BlobConvolutionBackwardAdreno, true, 0, 3, 1, inputDiff.Width(), inputDiff.ObjectCount() * inputDiff.Height(), inputChannels),
 			&param, sizeof( param ), 0, 0, images, 3, bufs, sizes, 1,
 			inputDiff.Width(), inputDiff.ObjectCount() * inputDiff.Height(), inputChannels );
 	} else {
@@ -475,7 +475,7 @@ void CVulkanMathEngine::BlobConvolutionBackward( const CConvolutionDesc& convDes
 			outputDiff.Width(), outputDiff.Height(), outputDiff.ObjectCount(), inputDiff.Width(), inputDiff.Height(),
 			inputChannels, filter.Width(), filter.Height(), filter.ObjectCount(), 0 };
 
-		runShader( shaderLoader->GET_SHADER_DATA( BlobConvolutionBackward, true, 0, 0, 4 ),
+		runShader( shaderLoader->GET_SHADER_DATA( BlobConvolutionBackward, true, 0, 0, 4, inputDiff.Width(), inputDiff.ObjectCount() * inputDiff.Height(), inputChannels),
 			&param, sizeof( param ), 0, 0, 0, 0, bufs, sizes, 4,
 			inputDiff.Width(), inputDiff.ObjectCount() * inputDiff.Height(), inputChannels );
 	}
@@ -530,7 +530,7 @@ void CVulkanMathEngine::prepareBlobForConvolution( const CBlobDesc& blob, const 
 	PARAM_STRUCT( PrepareBlobForConvolution ) param =
 		{ { blob.Width(), blob.Height() }, blob.ObjectCount(), totalChannels, channels4 };
 
-	runShader( shaderLoader->GET_SHADER_DATA( PrepareBlobForConvolution, true, 0, 0, 2 ),
+	runShader( shaderLoader->GET_SHADER_DATA( PrepareBlobForConvolution, true, 0, 0, 2, blob.Width() * blob.ObjectCount(), blob.Height() * channels4, 1),
 		&param, sizeof( param ), 0, 0, 0, 0, bufs, sizes, 2,
 		blob.Width() * blob.ObjectCount(), blob.Height() * channels4, 1 );
 }
@@ -558,7 +558,7 @@ const CVulkanImage& CVulkanMathEngine::prepareBlobForConvolutionAdreno( const CB
 	PARAM_STRUCT( PrepareBlobForConvolutionAdreno ) param =
 		{ { blob.Width(), blob.Height() }, blob.ObjectCount(), totalChannels, channels4, channelGroupSize };
 
-	runShader( shaderLoader->GET_SHADER_DATA( PrepareBlobForConvolutionAdreno, true, 1, 0, 1),
+	runShader( shaderLoader->GET_SHADER_DATA( PrepareBlobForConvolutionAdreno, true, 1, 0, 1, blob.Width() * blob.ObjectCount(), blob.Height() * channels4, 1),
 		&param, sizeof(param), images, 1, 0, 0, bufs, sizes, 1,
 		blob.Width() * blob.ObjectCount(), blob.Height() * channels4, 1 );
 
@@ -610,7 +610,7 @@ void CVulkanMathEngine::blobConvolution3x3s1d1Adreno( const CCommonConvolutionDe
 		source.ObjectCount(), result.Width(), result.Height(), filter.ObjectCount(), (freeTermData == 0) ? 0 : 1,
 		inputChannelGroupSize };
 
-	runShader( shaderLoader->GET_SHADER_DATA(BlobConvolution3x3s1d1Adreno, true, 0, 3, 1),
+	runShader( shaderLoader->GET_SHADER_DATA(BlobConvolution3x3s1d1Adreno, true, 0, 3, 1, width4 * result.ObjectCount(), height3 * filter.ObjectCount(), 1),
 		&param, sizeof(param), 0, 0, samplers, 3, bufs, sizes, 1,
 		width4 * result.ObjectCount(), height3 * filter.ObjectCount(), 1 );
 }
@@ -632,7 +632,7 @@ const CVulkanImage& CVulkanMathEngine::blobConvolution3x3s1d1PrepareFilterAdreno
 
 	PARAM_STRUCT( PrepareFilter3x3ForConvolutionAdreno ) param = { filter.ObjectCount(), channels };
 
-	runShader( shaderLoader->GET_SHADER_DATA( PrepareFilter3x3ForConvolutionAdreno, true, 1, 0, 1),
+	runShader( shaderLoader->GET_SHADER_DATA( PrepareFilter3x3ForConvolutionAdreno, true, 1, 0, 1, filter.ObjectCount(), fullHeight, 1),
 		&param, sizeof(param), images, 1, 0, 0, bufs, sizes, 1, filter.ObjectCount(), fullHeight, 1 );
 
 	return *images[0];
@@ -668,7 +668,7 @@ const CVulkanImage& CVulkanMathEngine::blobConvolution3x3s1d1PrepareSourceAdreno
 		blob.Width(), blob.Height(), blob.ObjectCount(), paddingTop, paddingBottom, paddingLeft, paddingRight,
 		channelGroupSize };
 
-	runVectorShader(shaderLoader->GET_SHADER_DATA(PrepareBlobWithPaddingAdreno, true, 1, 0, 1),
+	runVectorShader(shaderLoader->GET_SHADER_DATA(PrepareBlobWithPaddingAdreno, true, 1, 0, 1, totalWidth4 * totalHeight, 1, 1),
 		&param, sizeof(param), images, 1, 0, 0, bufs, sizes, 1, totalWidth4 * totalHeight);
 
 	return *images[0];
@@ -713,7 +713,7 @@ void CVulkanMathEngine::blobConvolution3x3s1d1( const CCommonConvolutionDesc& de
 	PARAM_STRUCT( BlobConvolution3x3s1d1 ) param = { totalWidth, totalHeight, channels, source.ObjectCount(),
 		result.Width(), result.Height(), filter.ObjectCount(), (freeTermData == 0) ? 0 : 1 };
 
-	runShader( shaderLoader->GET_SHADER_DATA( BlobConvolution3x3s1d1, true, 0, 0, 4), &param,
+	runShader( shaderLoader->GET_SHADER_DATA( BlobConvolution3x3s1d1, true, 0, 0, 4, width4, height3 * result.ObjectCount(), filter.ObjectCount()), &param,
 		sizeof(param), 0, 0, 0, 0, bufs, sizes, 4, width4, height3 * result.ObjectCount(), filter.ObjectCount() );
 }
 
@@ -732,7 +732,7 @@ void CVulkanMathEngine::blobConvolution3x3s1d1PrepareSource( const CBlobDesc& bl
 	PARAM_STRUCT(PrepareBlobWithPaddingBuffers) param = { channels, blob.Width(), blob.Height(), blob.ObjectCount(),
 		paddingTop, paddingBottom, paddingLeft, paddingRight };
 
-	runVectorShader( shaderLoader->GET_SHADER_DATA(PrepareBlobWithPaddingBuffers, true, 0, 0, 2),
+	runVectorShader( shaderLoader->GET_SHADER_DATA(PrepareBlobWithPaddingBuffers, true, 0, 0, 2, vectorSize, 1, 1),
 		&param, sizeof(param), 0, 0, 0, 0, bufs, sizes, 2, vectorSize );
 }
 
@@ -767,7 +767,7 @@ void CVulkanMathEngine::blobConvolutionImpl1Adreno( const CCommonConvolutionDesc
 		filter.Width(), filter.Height(), filter.ObjectCount(), startChannel,
 		inputChannelGroupSize, filterChannelGroupSize };
 
-	runShader( shaderLoader->GET_SHADER_DATA( BlobConvolutionAdreno, true, 0, 3, 1),
+	runShader( shaderLoader->GET_SHADER_DATA( BlobConvolutionAdreno, true, 0, 3, 1, result.Width() * result.ObjectCount(), channelsToProc * result.Height(), 1),
 		&param, sizeof(param), 0, 0, samplers, 3, bufs, sizes, 1,
 		result.Width() * result.ObjectCount(), channelsToProc * result.Height(), 1 );
 }
@@ -801,7 +801,7 @@ void CVulkanMathEngine::blobConvolutionImpl8Adreno( const CCommonConvolutionDesc
 		filter.Width(), filter.Height(), filter.ObjectCount(), channels8,
 		inputChannelGroupSize, filterChannelGroupSize };
 
-	runShader( shaderLoader->GET_SHADER_DATA( BlobConvolution8Adreno, true, 0, 3, 1), &param, sizeof(param),
+	runShader( shaderLoader->GET_SHADER_DATA( BlobConvolution8Adreno, true, 0, 3, 1, result.Width() * result.ObjectCount(), channels8 * result.Height(), 1), &param, sizeof(param),
 		0, 0, samplers, 3, bufs, sizes, 1, result.Width() * result.ObjectCount(), channels8 * result.Height(), 1 );
 }
 
@@ -826,7 +826,7 @@ void CVulkanMathEngine::blobConvolutionImpl1( const CCommonConvolutionDesc& desc
 		result.Width(), result.Height(), result.ObjectCount(), source.Width(), source.Height(), totalInputChannels,
 		filter.Width(), filter.Height(), filter.ObjectCount(), startChannel };
 
-	runShader( shaderLoader->GET_SHADER_DATA( BlobConvolution, true, 0, 0, 4 ),
+	runShader( shaderLoader->GET_SHADER_DATA( BlobConvolution, true, 0, 0, 4, result.Width() * result.ObjectCount(), channelsToProc * result.Height(), 1),
 		&param, sizeof( param ), 0, 0, 0, 0, bufs, sizes, 4,
 		result.Width() * result.ObjectCount(), channelsToProc * result.Height(), 1 );
 }
@@ -851,7 +851,7 @@ void CVulkanMathEngine::blobConvolutionImpl8( const CCommonConvolutionDesc& desc
 		result.Width(), result.Height(), result.ObjectCount(), source.Width(), source.Height(), totalInputChannels,
 		filter.Width(), filter.Height(), filter.ObjectCount(), channels8 };
 
-	runShader( shaderLoader->GET_SHADER_DATA( BlobConvolution8, true, 0, 0, 4 ), &param, sizeof( param ),
+	runShader( shaderLoader->GET_SHADER_DATA( BlobConvolution8, true, 0, 0, 4, result.Width() * result.ObjectCount(), channels8 * result.Height(), 1), &param, sizeof( param ),
 		0, 0, 0, 0, bufs, sizes, 4, result.Width() * result.ObjectCount(), channels8 * result.Height(), 1 );
 }
 
@@ -875,7 +875,7 @@ const CVulkanImage& CVulkanMathEngine::blobConvolutionBackwardPrepareFilterAdren
 	PARAM_STRUCT( PrepareFilterForConvolutionBackwardAdreno ) param =
 		{ { blob.Width(), blob.Height() }, totalChannels, blob.ObjectCount(), batchSize4 };
 
-	runShader( shaderLoader->GET_SHADER_DATA( PrepareFilterForConvolutionBackwardAdreno, true, 1, 0, 1),
+	runShader( shaderLoader->GET_SHADER_DATA( PrepareFilterForConvolutionBackwardAdreno, true, 1, 0, 1, xSize, ySize, 1),
 		&param, sizeof(param), images, 1, 0, 0, bufs, sizes, 1, xSize, ySize, 1 );
 
 	return *images[0];
@@ -940,7 +940,7 @@ void CVulkanMathEngine::blobChannelwiseConvolution3x3s1( const CChannelwiseConvo
 	const int combineH = 2;
     const int combineW = 2;
     const int channelBlocksCount = Ceil( result.Height(), combineH ) * Ceil( result.Width() , combineW );
-	runShader( shaderLoader->GET_SHADER_DATA( BlobChannelwiseConvolution3x3s1, true, 0, 0, 4),
+	runShader( shaderLoader->GET_SHADER_DATA( BlobChannelwiseConvolution3x3s1, true, 0, 0, 4, Ceil(totalChannels, 2), channelBlocksCount, result.ObjectCount()),
 		&param, sizeof(param), 0, 0, 0, 0, bufs, sizes, 4,
 		Ceil( totalChannels, 2 ), channelBlocksCount, result.ObjectCount() );
 }
@@ -974,7 +974,7 @@ void CVulkanMathEngine::blobChannelwiseConvolution3x3s2( const CChannelwiseConvo
 	const int combineH = 2;
 	const int combineW = 2;
 	const int channelBlocksCount = Ceil( result.Height(), combineH ) * Ceil( result.Width(), combineW );
-	runShader( shaderLoader->GET_SHADER_DATA( BlobChannelwiseConvolution3x3s2, true, 0, 0, 4 ),
+	runShader( shaderLoader->GET_SHADER_DATA( BlobChannelwiseConvolution3x3s2, true, 0, 0, 4, totalChannels, channelBlocksCount, result.ObjectCount()),
 		&param, sizeof( param ), 0, 0, 0, 0, bufs, sizes, 4,
 		totalChannels, channelBlocksCount, result.ObjectCount() );
 }
@@ -1010,7 +1010,7 @@ void CVulkanMathEngine::BlobChannelwiseConvolution( const CChannelwiseConvolutio
 			totalChannels, result.Width(), result.Height(), result.ObjectCount(), source.Width(), source.Height(),
 			filter.Width(), filter.Height(), inputChannelGroupSize, filterChannelGroupSize };
 
-		runShader( shaderLoader->GET_SHADER_DATA(BlobChannelwiseConvolutionAdreno, true, 0, 3, 1),
+		runShader( shaderLoader->GET_SHADER_DATA(BlobChannelwiseConvolutionAdreno, true, 0, 3, 1, result.Width() * result.ObjectCount(), channels4 * result.Height(), 1),
 			&param, sizeof(param), 0, 0, samplers, 3, bufs, sizes, 1,
 			result.Width() * result.ObjectCount(), channels4 * result.Height(), 1 );
 	} else {
@@ -1041,7 +1041,7 @@ void CVulkanMathEngine::BlobChannelwiseConvolution( const CChannelwiseConvolutio
 			filter.Width(), filter.Height() 
 		};
 
-		runShader( shaderLoader->GET_SHADER_DATA( BlobChannelwiseConvolution, true, 0, 0, 4),
+		runShader( shaderLoader->GET_SHADER_DATA( BlobChannelwiseConvolution, true, 0, 0, 4, totalChannels, result.Height() * result.Width(), result.ObjectCount() ),
 			&param, sizeof(param), 0, 0, 0, 0, bufs, sizes, 4,
 			totalChannels, result.Height() * result.Width(), result.ObjectCount() );
 	}

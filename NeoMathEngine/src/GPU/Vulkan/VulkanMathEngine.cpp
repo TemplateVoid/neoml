@@ -382,7 +382,7 @@ const CVulkanImage* CVulkanMathEngine::getTmpImage( TTmpVulkanImage imageId )
 	return tmpImages[imageId];
 }
 
-void CVulkanMathEngine::runShader( const CVulkanShaderData& shader, const void* param, int paramSize,
+void CVulkanMathEngine::runShader( const CVulkanShader& shader, const void* param, int paramSize,
 	const CVulkanImage** images, int imageCount, const CVulkanImage** samplers, int samplerCount,
 	const CMemoryHandle* dataBuffers, const size_t* dataSizes, int dataBufferCount,
 	int countX, int countY, int countZ )
@@ -393,7 +393,7 @@ void CVulkanMathEngine::runShader( const CVulkanShaderData& shader, const void* 
 		dataBuffers, dataSizes, dataBufferCount );
 }
 
-void CVulkanMathEngine::runVectorShader( const CVulkanShaderData& shader, const void* param, int paramSize,
+void CVulkanMathEngine::runVectorShader( const CVulkanShader& shader, const void* param, int paramSize,
 	const CVulkanImage** images, int imageCount, const CVulkanImage** samplers, int samplerCount,
 	const CMemoryHandle* dataBuffers, const size_t* dataSizes, int dataBufferCount, int count )
 {
@@ -418,7 +418,7 @@ const CVulkanImage& CVulkanMathEngine::batchVectorToImage( int batchSize, const 
 
 	PARAM_STRUCT(VectorToImage) param = { batchSize, size };
 
-	runVectorShader( shaderLoader->GET_SHADER_DATA( VectorToImage, true, 1, 0, 1 ),
+	runVectorShader( shaderLoader->GET_SHADER_DATA( VectorToImage, true, 1, 0, 1, size4 * batchSize, 1 ,1),
 		&param, sizeof(param), images, 1, 0, 0, bufs, sizes, 1, size4 * batchSize );
 
 	return *images[0];
