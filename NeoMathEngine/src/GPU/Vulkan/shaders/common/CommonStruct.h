@@ -872,7 +872,7 @@ PARAM_STRUCT(BatchMultiplyMatrixByTransposedMatrixBorders)
 /////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////
 // BatchInitMultiplyMatrixByTransposedMatrixBorders
-DEFINE_SHADER_3D( BatchInitMultiplyMatrixByTransposedMatrixBorders )
+DEFINE_SHADER_2D( BatchInitMultiplyMatrixByTransposedMatrixBorders )
 
 PARAM_STRUCT( BatchInitMultiplyMatrixByTransposedMatrixBorders )
 {
