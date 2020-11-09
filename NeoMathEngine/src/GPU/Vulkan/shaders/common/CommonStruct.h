@@ -19,6 +19,8 @@ limitations under the License.
 #ifndef _GLSL_
 #pragma once
 
+#include <cstdint>
+
 namespace NeoML {
 #endif
 

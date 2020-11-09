@@ -21,6 +21,7 @@ limitations under the License.
 
 #include <vector>
 #include <mutex>
+#include <memory>
 #include <vulkan/vulkan.h>
 #include <NeoMathEngine/NeoMathEngine.h>
 #include <MathEngineAllocator.h>

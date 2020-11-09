@@ -26,6 +26,7 @@ limitations under the License.
 #include <MathEngineDnnPoolings.h>
 
 #include <climits>
+#include <cfloat>
 
 namespace NeoML {
 
@@ -235,8 +236,8 @@ void CVulkanMathEngine::BlobGlobalMaxPooling( const CGlobalMaxPoolingDesc& pooli
 	const CBlobDesc& source = desc.Source;
 	const CBlobDesc& result = desc.Result;
 
-	VectorFill(resultData, -FLT_MAX, result.BlobSize());
-	VectorFill(maxIndicesData, -1, result.BlobSize());
+	VectorFill( resultData, -FLT_MAX, result.BlobSize() );
+	VectorFill( maxIndicesData, -1, result.BlobSize() );
 
 	CMemoryHandle bufs[3] = { sourceData, maxIndicesData, resultData };
 	size_t sizes[3] = { source.BlobSize() * sizeof(float), result.BlobSize() * sizeof(int), result.BlobSize() * sizeof(float) };
