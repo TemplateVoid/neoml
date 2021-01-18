@@ -18,10 +18,6 @@ limitations under the License.
 
 #include <TestFixture.h>
 
-#if FINE_PLATFORM( FINE_IOS )
-#include <sys/kdebug_signpost.h>
-#endif
-
 #include <thread>
 #include <future>
 
