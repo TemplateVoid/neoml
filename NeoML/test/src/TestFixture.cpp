@@ -274,7 +274,7 @@ IMathEngine& MathEngine()
 {
 	if( mathEngine == nullptr ) {
 		mathEngine = CreateMathEngine( type, 0u, threadCount );
-		NeoAssert( mathEngine_ != nullptr );
+		NeoAssert( mathEngine != nullptr );
 		SetMathEngineExceptionHandler( GetExceptionHandler() );
 	}
 	return *mathEngine;
