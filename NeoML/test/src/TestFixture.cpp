@@ -182,7 +182,7 @@ IMathEngine* CreateMathEngine( TMathEngineType type, std::size_t memoryLimit, in
 		case MET_Cpu: {
 			result = CreateCpuMathEngine( threadCount, memoryLimit );
 			GTEST_LOG_( INFO ) << "Create CPU MathEngine, threadCount = " << threadCount;
-			break;
+			break; 
 		}
 	}
 	return result;
@@ -286,6 +286,11 @@ void DeleteMathEngine()
 		delete mathEngine;
 		mathEngine = nullptr;
 	}
+}
+
+TMathEngineType MathEngineType()
+{
+	return type;
 }
 
 } // namespace NeoMLTest
