@@ -25,6 +25,8 @@ CString GetTestDataFilePath( const CString& relativePath, const CString& fileNam
 
 // Get global MathEngine.
 IMathEngine& MathEngine();
+// Delete global MathEngine
+void DeleteMathEngine();
 
 void SetPlatformEnv( void* platformEnv );
 
