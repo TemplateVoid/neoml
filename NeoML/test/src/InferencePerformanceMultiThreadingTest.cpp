@@ -231,8 +231,11 @@ TEST_P( CDnnInferencePerformanceTest, LocalMathEngine )
 
 	constexpr std::size_t memoryLimit = 256 * 1024 * 1024;
 
+	auto type = MathEngine().GetType();
+	DeleteMathEngine();
+
 	for( int i = 0; i < param.ThreadCount; ++i ) {
-		auto mathEngine = CreateMathEngine( MathEngine().GetType(), memoryLimit );
+		auto mathEngine = CreateMathEngine( type, memoryLimit, 1 );
 		ASSERT_TRUE( mathEngine != nullptr ) << i;
 		mathEngines.emplace_back( mathEngine );
 		results.push_back( std::async( std::launch::async, Run, std::ref( param ), std::ref( *mathEngine ) ) );

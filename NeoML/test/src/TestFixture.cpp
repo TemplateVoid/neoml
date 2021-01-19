@@ -27,6 +27,8 @@ namespace {
 	IMathEngine* mathEngine = nullptr;
 	CString testDir;
 	void* platformEnv = nullptr;
+	int threadCount = 0;
+	TMathEngineType type = MET_Undefined;
 
 	template <typename T, std::size_t N>
 	bool StartsWith( const T* str, const T(&prefix)[N] )
@@ -142,8 +144,7 @@ namespace {
 		if( value ) {
 			try {
 				return std::stoi( value );
-			}
-			catch( std::exception& ) {
+			} catch( std::exception& ) {
 				return 0;
 			}
 		}
@@ -196,23 +197,16 @@ int RunTests( int argc, char* argv[], void* platformEnv )
 	NeoMLTest::InitTestDataPath( argc, argv );
 	::testing::InitGoogleTest( &argc, argv );
 
-	const int threadCount = NeoMLTest::GetThreadCount( argc, argv );
+	threadCount = NeoMLTest::GetThreadCount( argc, argv );
 
-	auto type = GetMathEngineType( argc, argv );
-	
-	std::unique_ptr<IMathEngine> mathEngine_( CreateMathEngine( type, threadCount ) );
-	NeoAssert( mathEngine_ != nullptr );
-	
-	SetMathEngineExceptionHandler( GetExceptionHandler() );
+	type = GetMathEngineType( argc, argv );
 
-	mathEngine = mathEngine_.get();
-
-    SetPlatformEnv( platformEnv );
+	SetPlatformEnv( platformEnv );
 
 	int result = RUN_ALL_TESTS();
-	
-	mathEngine = nullptr;
-	
+
+	DeleteMathEngine();
+
 	return result;
 }
 
@@ -278,8 +272,20 @@ CString GetTestDataFilePath( const CString& relativePath, const CString& fileNam
 
 IMathEngine& MathEngine()
 {
-	NeoAssert( mathEngine != nullptr );
+	if( mathEngine == nullptr ) {
+		mathEngine = CreateMathEngine( type, 0u, threadCount );
+		NeoAssert( mathEngine_ != nullptr );
+		SetMathEngineExceptionHandler( GetExceptionHandler() );
+	}
 	return *mathEngine;
+}
+
+void DeleteMathEngine()
+{
+	if( mathEngine ) {
+		delete mathEngine;
+		mathEngine = nullptr;
+	}
 }
 
 } // namespace NeoMLTest
