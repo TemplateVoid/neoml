@@ -41,7 +41,8 @@ public:
 	bool IsLoaded() const { return handle != nullptr; }
 
 	// Gets the function address in the library
-	FARPROC GetProcAddress( const char* functionName ) const;
+	template <typename T>
+	T GetProcAddress( const char* functionName ) const;
 
 	// Unloads the library
 	void Free();
@@ -62,12 +63,13 @@ inline bool CDll::Load( const char* fileName )
 	return ( handle != nullptr );
 }
 
-inline FARPROC CDll::GetProcAddress( const char* functionName ) const
+template <typename T>
+inline T CDll::GetProcAddress( const char* functionName ) const
 {
 #if FINE_PLATFORM( FINE_WINDOWS )
-	return ::GetProcAddress( static_cast<HMODULE>( handle ), functionName );
+	return (T) ::GetProcAddress( static_cast<HMODULE>( handle ), functionName );
 #elif FINE_PLATFORM( FINE_ANDROID ) || FINE_PLATFORM( FINE_LINUX ) || FINE_PLATFORM( FINE_DARWIN )
-	return (FARPROC)(::dlsym( handle, functionName ));
+	return (T) ::dlsym( handle, functionName );
 #else
 	#error "Platform is not supported!"
 #endif
