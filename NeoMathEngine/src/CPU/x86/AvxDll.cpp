@@ -125,7 +125,7 @@ ISimdMathEngine* CAvxDll::CreateSimdMathEngine( IMathEngine* mathEngine, int thr
 
 bool CAvxDll::loadFunctions()
 {
-	createSimdMathEngineFunc = reinterpret_cast<CreateSimdMathEngineFunc>( GetProcAddress( CreateSimdMathEngineFuncName ) );
+	createSimdMathEngineFunc = reinterpret_cast<CreateSimdMathEngineFunc>( GetProcAddress<CreateSimdMathEngineFunc>( CreateSimdMathEngineFuncName ) );
 	return createSimdMathEngineFunc != nullptr;
 }
 
