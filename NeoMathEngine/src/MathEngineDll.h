@@ -21,7 +21,6 @@ limitations under the License.
 #include <windows.h>
 #elif FINE_PLATFORM( FINE_ANDROID ) || FINE_PLATFORM( FINE_LINUX ) || FINE_PLATFORM( FINE_DARWIN )
 #include <dlfcn.h>
-typedef int (*FARPROC)();
 #endif
 
 #include <NeoMathEngine/CrtAllocatedObject.h>
@@ -40,7 +39,7 @@ public:
 	// Checks if the library is loaded
 	bool IsLoaded() const { return handle != nullptr; }
 
-	// Gets the function address in the library
+	// Gets the function address in the library. Cast to function pointer type T
 	template <typename T>
 	T GetProcAddress( const char* functionName ) const;
 
@@ -67,9 +66,9 @@ template <typename T>
 inline T CDll::GetProcAddress( const char* functionName ) const
 {
 #if FINE_PLATFORM( FINE_WINDOWS )
-	return (T) ::GetProcAddress( static_cast<HMODULE>( handle ), functionName );
+	return reinterpret_cast<T>( reinterpret_cast<uintptr_t>( ::GetProcAddress( static_cast<HMODULE>( handle ), functionName ) ) );
 #elif FINE_PLATFORM( FINE_ANDROID ) || FINE_PLATFORM( FINE_LINUX ) || FINE_PLATFORM( FINE_DARWIN )
-	return (T) ::dlsym( handle, functionName );
+	return reinterpret_cast<T>( reinterpret_cast<uintptr_t>( ::dlsym( handle, functionName ) ) );
 #else
 	#error "Platform is not supported!"
 #endif
